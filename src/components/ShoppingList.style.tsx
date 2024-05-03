@@ -11,7 +11,9 @@ export const Container = styled.div`
   background: linear-gradient(135deg, ${neutralColor}, ${primaryColor});
   max-width: 60rem; /* Adjust the width as needed */
   margin: 1rem auto; /* Center the container horizontally */
-  border-radius: 0.5rem;
+  border-radius: 1rem;
+  height: 93vh;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
 `;
 
 export const Title = styled.h2`
@@ -25,17 +27,16 @@ export const Input = styled.input`
   border: none;
   border-radius: 0.5rem;
   font-size: 1.6rem;
-  width: 100%;
-  max-width: 30rem;
+  width: 92%;
   background-color: ${neutralColor};
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   margin-bottom: 0.5rem;
   transition: background-color, box-shadow 0.3s ease;
 
   &:focus {
     outline: none;
     background-color: #fafafa;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
 `;
 
@@ -52,11 +53,10 @@ export const ListsContainer = styled.div`
 
 export const List = styled.ul`
   list-style: none;
-  padding: 0;
-  border: 4px solid transparent;
+  border: 2px solid rgba(33, 90, 222, 0.5);
   border-radius: 1rem;
   padding: 1rem;
-  border-image: linear-gradient(to right, ${neutralColor}, ${secondaryColor}) 4;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   width: 45%;
 `;
 
@@ -92,6 +92,7 @@ export const Label = styled.label`
     position: absolute;
     right: 0.3rem;
     transition: color 0.3s ease;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
   }
   & button:hover {
     color: ${secondaryColor};
@@ -129,16 +130,15 @@ export const CheckedItemsContainer = styled.div`
 `;
 
 export const CheckedItemsTitle = styled.h3`
-  font-size: 2rem;
+  font-size: 1.8rem;
 `;
 
 export const CheckedItemsList = styled.ul`
   list-style: none;
-  padding: 0;
-  border: 4px solid transparent;
+  border: 2px solid rgba(239, 239, 239, 0.5);
   border-radius: 1rem;
   padding: 1rem;
-  border-image: linear-gradient(to right, ${primaryColor}, ${neutralColor}) 4;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 `;
 
 export const CheckedItem = styled.li`
@@ -179,6 +179,7 @@ export const CheckedItemName = styled.span`
 export const Message = styled.p`
   font-size: 1.4rem;
   width: 101%;
+  margin-bottom: 0.5rem;
 `;
 
 export const RemoveAllButton = styled.button`
@@ -190,6 +191,7 @@ export const RemoveAllButton = styled.button`
   border-radius: 0.5rem;
   transition: all 0.3s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
   &:hover {
     color: ${secondaryColor};
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
@@ -208,6 +210,7 @@ export const SortButton = styled.button`
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   margin-bottom: 0.5rem;
   color: ${primaryColor};
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
 
   &:hover {
     background-color: ${primaryColor};

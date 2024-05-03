@@ -134,25 +134,36 @@ const ShoppingList: React.FC = () => {
   // JSX structure for the component
   return (
     <Container>
-      <Title>Shopping List</Title>
-      <Input
-        type="text"
-        value={inputValue}
-        placeholder="add new item"
-        onChange={(e) => setInputValue(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            handleAddItem();
-          }
-        }}
-      />
-      {error && <ErrorMessage>{error}</ErrorMessage>}{" "}
+      <Title>
+        Shopping List{" "}
+        <span role="img" aria-label="Shopping cart">
+          🛒
+        </span>
+      </Title>
+
       <ListsContainer>
         <List>
-          <SortButton onClick={sortShoppingListAlphabetically}>
-            Sort A{" > "}Z
-          </SortButton>
-
+          <Input
+            type="text"
+            value={inputValue}
+            placeholder="add new item"
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleAddItem();
+              }
+            }}
+          />
+          {error && <ErrorMessage>{error}</ErrorMessage>}{" "}
+          {items.length > 0 && (
+            <SortButton onClick={sortShoppingListAlphabetically}>
+              A{" "}
+              <span role="img" aria-label="right arrow">
+                ➡️
+              </span>{" "}
+              Z
+            </SortButton>
+          )}
           {items.map((item) => (
             <ListItem key={item.id}>
               <Label>
@@ -165,17 +176,35 @@ const ShoppingList: React.FC = () => {
               </Label>
             </ListItem>
           ))}
-          <RemoveAllButton onClick={handleRemoveAllListItems}>
-            Remove All
-          </RemoveAllButton>
+          {items.length > 0 && (
+            <RemoveAllButton onClick={handleRemoveAllListItems}>
+              Remove All
+            </RemoveAllButton>
+          )}
         </List>
+
         <CheckedItemsContainer>
           <CheckedItemsList>
-            <CheckedItemsTitle>Checked Items</CheckedItemsTitle>
-            <Message>~ Click to bring back to Shopping List ~</Message>
-            <SortButton onClick={sortCheckedItemsAlphabetically}>
-              Sort A{" > "}Z
-            </SortButton>
+            <CheckedItemsTitle>
+              Checked Items{" "}
+              <span role="img" aria-label="checked arrow">
+                ☑️
+              </span>
+            </CheckedItemsTitle>
+            {checkedItems.length > 0 && (
+              <Message>
+                {">"} Click to return to Shopping List {"<"}
+              </Message>
+            )}{" "}
+            {checkedItems.length > 0 && (
+              <SortButton onClick={sortCheckedItemsAlphabetically}>
+                A{" "}
+                <span role="img" aria-label="right arrow">
+                  ➡️
+                </span>{" "}
+                Z
+              </SortButton>
+            )}
             {checkedItems.map((item) => (
               <CheckedItem
                 key={item.id}
@@ -192,9 +221,11 @@ const ShoppingList: React.FC = () => {
                 </button>
               </CheckedItem>
             ))}
-            <RemoveAllButton onClick={handleRemoveAllCheckedItems}>
-              Remove All
-            </RemoveAllButton>
+            {checkedItems.length > 0 && (
+              <RemoveAllButton onClick={handleRemoveAllCheckedItems}>
+                Remove All
+              </RemoveAllButton>
+            )}
           </CheckedItemsList>
         </CheckedItemsContainer>
       </ListsContainer>
