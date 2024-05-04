@@ -41,7 +41,7 @@ export const Input = styled.input`
 `;
 
 export const ErrorMessage = styled.p`
-  color: #ff0000;
+  color: ${secondaryColor};
   font-size: 1.6rem;
   margin-bottom: 0.5rem;
 `;
@@ -194,8 +194,8 @@ export const RemoveAllButton = styled.button`
   transition: all 0.3s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+  color: ${secondaryColor};
   &:hover {
-    color: ${secondaryColor};
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     background-color: ${neutralColor};
   }

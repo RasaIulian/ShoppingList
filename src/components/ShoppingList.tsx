@@ -64,6 +64,7 @@ const ShoppingList: React.FC = () => {
         )
       ) {
         setError("Item already in the list.");
+        setInputValue(""); // Clear input field
         return;
       } else if (
         checkedItems.some(
@@ -71,6 +72,7 @@ const ShoppingList: React.FC = () => {
         )
       ) {
         setError("Item already in checked list ->");
+        setInputValue(""); // Clear input field
         return;
       }
 
