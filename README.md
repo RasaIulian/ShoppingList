@@ -1,3 +1,9 @@
+PREVIEW:<br>
+![image](https://github.com/RasaIulian/ShoppingList/assets/99275349/82f825ae-b4a3-46c6-9baa-900873f55f41)
+![image](https://github.com/RasaIulian/ShoppingList/assets/99275349/f2e579d5-aed1-4a83-9660-24f548ada43e)
+
+
+
 <<<<<<< HEAD
 # Getting Started with Create React App
 
