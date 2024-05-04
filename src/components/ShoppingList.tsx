@@ -53,16 +53,24 @@ const ShoppingList: React.FC = () => {
   const handleAddItem = () => {
     if (inputValue.trim() !== "") {
       const newItem: ShoppingItem = {
-        id: Date.now(), // Generate a unique ID (you can use a better approach)
+        id: Date.now(), // Generate a unique ID
         name: inputValue,
       };
 
       // Check if the item already exists in the shopping list
-      if (items.some((item) => item.name === newItem.name)) {
-        setError("Item already in list.");
+      if (
+        items.some(
+          (item) => item.name.toLowerCase() === newItem.name.toLowerCase()
+        )
+      ) {
+        setError("Item already in the list.");
         return;
-      } else if (checkedItems.some((item) => item.name === newItem.name)) {
-        setError("Item already in checked items.");
+      } else if (
+        checkedItems.some(
+          (item) => item.name.toLowerCase() === newItem.name.toLowerCase()
+        )
+      ) {
+        setError("Item already in checked list ->");
         return;
       }
 
@@ -186,14 +194,14 @@ const ShoppingList: React.FC = () => {
         <CheckedItemsContainer>
           <CheckedItemsList>
             <CheckedItemsTitle>
-              Checked Items{" "}
+              Checked Items&nbsp;
               <span role="img" aria-label="checked arrow">
                 ☑️
               </span>
             </CheckedItemsTitle>
             {checkedItems.length > 0 && (
               <Message>
-                {">"} Click to return to Shopping List {"<"}
+                {"("}Click to bring back to Shopping&nbsp;List{")"}
               </Message>
             )}{" "}
             {checkedItems.length > 0 && (

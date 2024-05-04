@@ -7,12 +7,12 @@ const neutralColor = "#efefef"; // Gray
 
 export const Container = styled.div`
   font-family: Arial, sans-serif;
-  padding: 1.5rem;
+  padding: 1rem;
   background: linear-gradient(135deg, ${neutralColor}, ${primaryColor});
-  max-width: 60rem; /* Adjust the width as needed */
-  margin: 1rem auto; /* Center the container horizontally */
-  border-radius: 1rem;
-  height: 93vh;
+  max-width: 60rem;
+  margin: 0 auto;
+  border-radius: 2rem;
+  height: 100svh;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
 `;
 
@@ -27,7 +27,7 @@ export const Input = styled.input`
   border: none;
   border-radius: 0.5rem;
   font-size: 1.6rem;
-  width: 92%;
+  width: calc(100% - 2rem);
   background-color: ${neutralColor};
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   margin-bottom: 0.5rem;
@@ -43,7 +43,7 @@ export const Input = styled.input`
 export const ErrorMessage = styled.p`
   color: #ff0000;
   font-size: 1.6rem;
-  margin-top: 1rem;
+  margin-bottom: 0.5rem;
 `;
 export const ListsContainer = styled.div`
   display: flex;
@@ -53,11 +53,11 @@ export const ListsContainer = styled.div`
 
 export const List = styled.ul`
   list-style: none;
-  border: 2px solid rgba(33, 90, 222, 0.5);
+  border: 2px solid rgba(33, 90, 222, 0.2);
   border-radius: 1rem;
-  padding: 1rem;
+  padding: 0.5rem;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  width: 45%;
+  width: 47%;
 `;
 
 export const ListItem = styled.li`
@@ -65,7 +65,7 @@ export const ListItem = styled.li`
   display: flex;
   justify-content: space-between; /* Aligns the items to the left and right */
   align-items: center; /* Aligns the items vertically */
-  width: 100%;
+  width: calc(100%-0.6rem);
 `;
 
 export const Label = styled.label`
@@ -75,7 +75,7 @@ export const Label = styled.label`
   cursor: pointer;
   width: 100%;
   border-radius: 0.5rem;
-  padding: 0.3rem;
+  padding: 1rem;
   position: relative;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: background-color, box-shadow 0.3s ease;
@@ -90,7 +90,7 @@ export const Label = styled.label`
     border: none;
     cursor: pointer;
     position: absolute;
-    right: 0.3rem;
+    right: 1rem;
     transition: color 0.3s ease;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
   }
@@ -115,18 +115,19 @@ export const CheckboxInput = styled.input`
 
   &:hover::after {
     opacity: 1;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
     transition: opacity 0.3s ease;
   }
   &::after {
     content: "✔"; /* Unicode for check symbol */
     opacity: 0; /* Initially hide the check symbol */
-    position: absolute; /* Position the check symbol */
-    top: 0;
+    position: absolute;
+    top: 0.5rem;
   }
 `;
 
 export const CheckedItemsContainer = styled.div`
-  width: 45%;
+  width: 47%;
 `;
 
 export const CheckedItemsTitle = styled.h3`
@@ -135,9 +136,9 @@ export const CheckedItemsTitle = styled.h3`
 
 export const CheckedItemsList = styled.ul`
   list-style: none;
-  border: 2px solid rgba(239, 239, 239, 0.5);
+  border: 2px solid rgba(239, 239, 239, 0.2);
   border-radius: 1rem;
-  padding: 1rem;
+  padding: 0.5rem;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 `;
 
@@ -146,18 +147,18 @@ export const CheckedItem = styled.li`
   cursor: pointer;
   color: ${neutralColor};
   border-radius: 0.5rem;
-  padding: 0.3rem;
+  padding: 1rem;
   margin-bottom: 0.5rem;
   transition: background-color, box-shadow 0.3s ease;
-  width: 100%;
+  width: calc(100% - 2rem);
   display: flex;
-  justify-content: space-between; /* Aligns the items to the left and right */
-  align-items: center; /* Aligns the items vertically */
+  justify-content: space-between;
+  align-items: center;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
   &:hover {
     background-color: ${primaryColor};
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Increase shadow size for 3D effect */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   }
   & button {
     /* Styles for the X button */
@@ -165,6 +166,7 @@ export const CheckedItem = styled.li`
     border: none;
     cursor: pointer;
     color: ${neutralColor};
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
     transition: color 0.3s ease;
   }
   & button:hover {
@@ -187,7 +189,7 @@ export const RemoveAllButton = styled.button`
   border: none;
   cursor: pointer;
   font-size: 1.6rem;
-  padding: 0.5rem 1rem;
+  padding: 1rem;
   border-radius: 0.5rem;
   transition: all 0.3s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -204,7 +206,7 @@ export const SortButton = styled.button`
   border: none;
   cursor: pointer;
   font-size: 1.6rem;
-  padding: 0.5rem 1rem;
+  padding: 1rem;
   border-radius: 0.5rem;
   transition: all 0.3s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
