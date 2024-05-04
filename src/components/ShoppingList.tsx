@@ -165,7 +165,7 @@ const ShoppingList: React.FC = () => {
             }}
           />
           {error && <ErrorMessage>{error}</ErrorMessage>}{" "}
-          {items.length > 0 && (
+          {items.length > 4 && (
             <SortButton onClick={sortShoppingListAlphabetically}>
               A{" "}
               <span role="img" aria-label="right arrow">
@@ -186,7 +186,7 @@ const ShoppingList: React.FC = () => {
               </Label>
             </ListItem>
           ))}
-          {items.length > 0 && (
+          {items.length > 4 && (
             <RemoveAllButton onClick={handleRemoveAllListItems}>
               Remove All
             </RemoveAllButton>
@@ -206,7 +206,7 @@ const ShoppingList: React.FC = () => {
                 {"("}Click to bring back to Shopping&nbsp;List{")"}
               </Message>
             )}{" "}
-            {checkedItems.length > 0 && (
+            {checkedItems.length > 4 && (
               <SortButton onClick={sortCheckedItemsAlphabetically}>
                 A{" "}
                 <span role="img" aria-label="right arrow">
@@ -231,7 +231,7 @@ const ShoppingList: React.FC = () => {
                 </button>
               </CheckedItem>
             ))}
-            {checkedItems.length > 0 && (
+            {checkedItems.length > 4 && (
               <RemoveAllButton onClick={handleRemoveAllCheckedItems}>
                 Remove All
               </RemoveAllButton>
