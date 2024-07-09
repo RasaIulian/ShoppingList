@@ -63,27 +63,10 @@ export const List = styled.ul`
 export const ListItem = styled.li`
   margin-bottom: 0.5rem;
   display: flex;
-  justify-content: space-between; /* Aligns the items to the left and right */
-  align-items: center; /* Aligns the items vertically */
-  width: calc(100%-0.6rem);
-`;
-
-export const Label = styled.label`
-  display: flex;
-  align-items: center;
-  font-size: 1.6rem;
-  cursor: pointer;
-  width: 100%;
-  border-radius: 0.5rem;
-  padding: 1rem;
   position: relative;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: background-color, box-shadow 0.3s ease;
-
-  &:hover {
-    background-color: ${neutralColor};
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Increase shadow size for 3D effect */
-  }
+  justify-content: space-between;
+  align-items: center;
+  width: calc(100% - 0.6rem);
   & button {
     /* Styles for the X button */
     background-color: transparent;
@@ -99,11 +82,31 @@ export const Label = styled.label`
   }
 `;
 
+export const Label = styled.label`
+  display: flex;
+  align-items: center;
+  font-size: 1.6rem;
+  cursor: pointer;
+  width: 100%;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-right: 0.5rem;
+  position: relative;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: background-color, box-shadow 0.3s ease;
+
+  &:hover {
+    background-color: ${neutralColor};
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Increase shadow size for 3D effect */
+  }
+`;
+
 export const CheckboxInput = styled.input`
   margin-right: 0.5rem;
   cursor: pointer;
   appearance: none;
   width: 1.6rem;
+  min-width: 1.6rem;
   height: 1.6rem;
   border: 1px solid;
   border-radius: 0.3rem;

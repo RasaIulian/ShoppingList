@@ -155,6 +155,7 @@ const ShoppingList: React.FC = () => {
         <List>
           <Input
             type="text"
+            name="textInput"
             value={inputValue}
             placeholder="add new item"
             onChange={(e) => setInputValue(e.target.value)}
@@ -179,11 +180,12 @@ const ShoppingList: React.FC = () => {
               <Label>
                 <CheckboxInput
                   type="checkbox"
+                  name="checkbox"
                   onChange={() => handleCheckItem(item)}
                 />
                 {item.name}
-                <button onClick={() => handleRemoveItem(item.id)}>X</button>
               </Label>
+              <button onClick={() => handleRemoveItem(item.id)}>X</button>
             </ListItem>
           ))}
           {items.length > 4 && (
