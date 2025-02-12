@@ -1,5 +1,5 @@
 import React from "react";
-import ShoppingList from "./components/ShoppingList";
+import ShoppingList from "./Pages/ShoppingList";
 
 const App: React.FC = () => {
   return (
