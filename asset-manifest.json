@@ -1,15 +1,13 @@
 {
   "files": {
-    "main.css": "/ShoppingList/static/css/main.9dcdd30d.chunk.css",
-    "main.js": "/ShoppingList/static/js/main.1ccd5cc5.chunk.js",
-    "main.js.map": "/ShoppingList/static/js/main.1ccd5cc5.chunk.js.map",
-    "runtime~main.js": "/ShoppingList/static/js/runtime~main.4013c62d.js",
-    "runtime~main.js.map": "/ShoppingList/static/js/runtime~main.4013c62d.js.map",
-    "static/js/2.dd6ba0b0.chunk.js": "/ShoppingList/static/js/2.dd6ba0b0.chunk.js",
-    "static/js/2.dd6ba0b0.chunk.js.map": "/ShoppingList/static/js/2.dd6ba0b0.chunk.js.map",
+    "main.css": "/ShoppingList/static/css/main.518294af.css",
+    "main.js": "/ShoppingList/static/js/main.3a9172b5.js",
     "index.html": "/ShoppingList/index.html",
-    "precache-manifest.12e75006526dfe53968515064ee65ece.js": "/ShoppingList/precache-manifest.12e75006526dfe53968515064ee65ece.js",
-    "service-worker.js": "/ShoppingList/service-worker.js",
-    "static/css/main.9dcdd30d.chunk.css.map": "/ShoppingList/static/css/main.9dcdd30d.chunk.css.map"
-  }
+    "main.518294af.css.map": "/ShoppingList/static/css/main.518294af.css.map",
+    "main.3a9172b5.js.map": "/ShoppingList/static/js/main.3a9172b5.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.518294af.css",
+    "static/js/main.3a9172b5.js"
+  ]
 }
