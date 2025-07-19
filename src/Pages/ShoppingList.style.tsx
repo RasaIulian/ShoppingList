@@ -10,9 +10,9 @@ export const Container = styled.div`
   padding: 1rem;
   background: linear-gradient(135deg, ${neutralColor}, ${primaryColor});
   max-width: 60rem;
-  margin: 0 auto;
+  margin: 1rem auto;
   border-radius: 2rem;
-  min-height: calc(100dvh - 2rem);
+  min-height: calc(100dvh - 4rem);
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
 `;
 

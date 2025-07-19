@@ -63,7 +63,7 @@ const ShoppingList: React.FC = () => {
           (item) => item.name.toLowerCase() === newItem.name.toLowerCase()
         )
       ) {
-        setError("Item already in the list.");
+        setError(`${newItem.name} is already in the list!`);
         setInputValue(""); // Clear input field
         return;
       } else if (
@@ -71,7 +71,7 @@ const ShoppingList: React.FC = () => {
           (item) => item.name.toLowerCase() === newItem.name.toLowerCase()
         )
       ) {
-        setError("Item already in checked list ->");
+        setError(`${newItem.name} already in checked list ->`);
         setInputValue(""); // Clear input field
         return;
       }
