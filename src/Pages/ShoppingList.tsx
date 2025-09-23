@@ -18,12 +18,244 @@ import {
   Message,
   RemoveAllButton,
   SortButton,
+  Category,
 } from "./ShoppingList.style";
+const categories = [
+  "fructe/legume",
+  "lactate",
+  "carne",
+  "panificație",
+  "băuturi",
+  "dulciuri",
+  "conserve",
+  "congelate",
+  "curățenie",
+  "igienă personală",
+  "nealimentare",
+  "altele",
+];
+type CategoryType = (typeof categories)[number];
+
+const categoryDisplay: Record<CategoryType, { name: string; emoji: string }> = {
+  "fructe/legume": { name: "Fructe/Legume", emoji: "🍎 🥦" },
+  lactate: { name: "Lactate", emoji: "🥛" },
+  carne: { name: "Carne", emoji: "🥩" },
+  panificație: { name: "Panificație", emoji: "🍞" },
+  băuturi: { name: "Băuturi", emoji: "🥤" },
+  dulciuri: { name: "Dulciuri", emoji: "🍬" },
+  conserve: { name: "Conserve", emoji: "🥫" },
+  congelate: { name: "Congelate", emoji: "🧊" },
+  curățenie: { name: "Curățenie", emoji: "🧼" },
+  "igienă personală": { name: "Igienă Personală", emoji: "🧴" },
+  nealimentare: { name: "Nealimentare", emoji: "🔋" },
+  altele: { name: "Altele", emoji: "🛒" },
+};
+
+const productCategoryMap: { [key: string]: CategoryType } = {
+  // Fructe/Legume
+  mere: "fructe/legume",
+  banane: "fructe/legume",
+  portocale: "fructe/legume",
+  struguri: "fructe/legume",
+  capsuni: "fructe/legume",
+  rosii: "fructe/legume",
+  castraveti: "fructe/legume",
+  cartofi: "fructe/legume",
+  ceapa: "fructe/legume",
+  morcovi: "fructe/legume",
+  salata: "fructe/legume",
+  ardei: "fructe/legume",
+  lamai: "fructe/legume",
+  avocado: "fructe/legume",
+  usturoi: "fructe/legume",
+  piersici: "fructe/legume",
+  pere: "fructe/legume",
+  ananas: "fructe/legume",
+  kiwi: "fructe/legume",
+  cirese: "fructe/legume",
+  zmeura: "fructe/legume",
+  afine: "fructe/legume",
+  prune: "fructe/legume",
+  pepene: "fructe/legume",
+  varza: "fructe/legume",
+  conopida: "fructe/legume",
+  broccoli: "fructe/legume",
+  dovlecei: "fructe/legume",
+  vinete: "fructe/legume",
+  fasole: "fructe/legume",
+  mazare: "fructe/legume",
+  "ceapa verde": "fructe/legume",
+  ridichi: "fructe/legume",
+  sparanghel: "fructe/legume",
+  anghinare: "fructe/legume",
+  sfecla: "fructe/legume",
+  telina: "fructe/legume",
+  papaya: "fructe/legume",
+  mango: "fructe/legume",
+  rodie: "fructe/legume",
+  curmale: "fructe/legume",
+
+  // Lactate
+  lapte: "lactate",
+  iaurt: "lactate",
+  branza: "lactate",
+  cascaval: "lactate",
+  smantana: "lactate",
+  unt: "lactate",
+  kefir: "lactate",
+  "branza de vaci": "lactate",
+  "lapte batut": "lactate",
+  mascarpone: "lactate",
+  gorgonzola: "lactate",
+  parmezan: "lactate",
+  mozzarella: "lactate",
+  ricotta: "lactate",
+  feta: "lactate",
+  telemea: "lactate",
+  edam: "lactate",
+  gouda: "lactate",
+  cheddar: "lactate",
+  "branza topita": "lactate",
+  "smantana pentru gatit": "lactate",
+  "branza de burduf": "lactate",
+  cottage: "lactate",
+
+  // Carne
+  pui: "carne",
+  porc: "carne",
+  vita: "carne",
+  peste: "carne",
+  carnati: "carne",
+  sunca: "carne",
+  salam: "carne",
+  curcan: "carne",
+  miel: "carne",
+  costita: "carne",
+  creveti: "carne",
+  somon: "carne",
+  ton: "carne",
+  calcan: "carne",
+  hering: "carne",
+  macrou: "carne",
+  sardine: "carne",
+  midii: "carne",
+  crab: "carne",
+  homar: "carne",
+  languste: "carne",
+  calamar: "carne",
+  caracatita: "carne",
+  mici: "carne",
+  "pulpa porc": "carne",
+  "piept pui": "carne",
+  "cotlet porc": "carne",
+  muschiulet: "carne",
+  ficat: "carne",
+  rinichi: "carne",
+  creier: "carne",
+  slanina: "carne",
+  pastrama: "carne",
+  "piept de curcan": "carne",
+  "pulpa de pui": "carne",
+  "coaste de porc": "carne",
+  "file de peste": "carne",
+
+  // Panificație
+  paine: "panificație",
+  chifle: "panificație",
+  cornuri: "panificație",
+  biscuiti: "panificație",
+  covrigi: "panificație",
+  franzela: "panificație",
+  bagheta: "panificație",
+  croissant: "panificație",
+  foccacia: "panificație",
+  pita: "panificație",
+  gogoși: "panificație",
+  branzoaice: "panificație",
+  placinta: "panificație",
+  prajitura: "panificație",
+  "orez expandat": "panificație",
+  patiserie: "panificație",
+  lipie: "panificație",
+  "poale-n brau": "panificație",
+  cozonac: "panificație",
+
+  // Băuturi
+  apa: "băuturi",
+  suc: "băuturi",
+  bere: "băuturi",
+  vin: "băuturi",
+  cafea: "băuturi",
+  ceai: "băuturi",
+  votca: "băuturi",
+  whisky: "băuturi",
+  rom: "băuturi",
+  gin: "băuturi",
+  sampanie: "băuturi",
+
+  // Dulciuri
+  ciocolata: "dulciuri",
+  bomboane: "dulciuri",
+  napolitane: "dulciuri",
+  prajituri: "dulciuri",
+  fursecuri: "dulciuri",
+  jeleuri: "dulciuri",
+
+  // Conserve
+  "conserve de ton": "conserve",
+  "conserve de porumb": "conserve",
+  "conserve de mazare": "conserve",
+  zacusca: "conserve",
+  "conserva de rosii": "conserve",
+  "conserva de fasole": "conserve",
+  "conserva de ciuperci": "conserve",
+  "conserva de peste": "conserve",
+  linte: "conserve",
+  naut: "conserve",
+
+  // Congelate
+  "legume congelate": "congelate",
+  "pizza congelata": "congelate",
+  "cartofi congelati": "congelate",
+  inghetata: "congelate",
+  "fructe de padure congelate": "congelate",
+  "pui congelat": "congelate",
+  "pește congelat": "congelate",
+
+  // Altele
+
+  // Curățenie
+  detergent: "curățenie",
+  "detergent de vase": "curățenie",
+  "solutie de geamuri": "curățenie",
+  bureti: "curățenie",
+  "saci de gunoi": "curățenie",
+  clor: "curățenie",
+
+  // Igienă Personală
+  sapun: "igienă personală",
+  sampon: "igienă personală",
+  "pasta de dinti": "igienă personală",
+  "periuta de dinti": "igienă personală",
+  "hartie igienica": "igienă personală",
+  deodorant: "igienă personală",
+
+  // Nealimentare
+  baterii: "nealimentare",
+  becuri: "nealimentare",
+  chibrituri: "nealimentare",
+};
+
+const guessCategory = (productName: string): CategoryType => {
+  const lowerCaseName = productName.trim().toLowerCase();
+  return productCategoryMap[lowerCaseName] || "altele";
+};
 
 interface ShoppingItem {
   // Defining the structure of a shopping item
   id: number;
   name: string;
+  category: CategoryType;
 }
 
 const ShoppingList: React.FC = () => {
@@ -52,9 +284,11 @@ const ShoppingList: React.FC = () => {
   // Function to handle adding a new item to the shopping list
   const handleAddItem = () => {
     if (inputValue.trim() !== "") {
+      const category = guessCategory(inputValue);
       const newItem: ShoppingItem = {
         id: Date.now(), // Generate a unique ID
         name: inputValue,
+        category: category,
       };
 
       // Check if the item already exists in the shopping list
@@ -141,6 +375,15 @@ const ShoppingList: React.FC = () => {
     });
   };
 
+  const groupedItems = items.reduce((acc, item) => {
+    const category = item.category;
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push(item);
+    return acc;
+  }, {} as Record<CategoryType, ShoppingItem[]>);
+
   // JSX structure for the component
   return (
     <Container>
@@ -168,26 +411,44 @@ const ShoppingList: React.FC = () => {
           {error && <ErrorMessage>{error}</ErrorMessage>}{" "}
           {items.length > 4 && (
             <SortButton onClick={sortShoppingListAlphabetically}>
-              A{" "}
               <span role="img" aria-label="right arrow">
-                ➡️
+                ⬇️
               </span>{" "}
-              Z
+              Sort A-Z
             </SortButton>
           )}
-          {items.map((item) => (
-            <ListItem key={item.id}>
-              <Label>
-                <CheckboxInput
-                  type="checkbox"
-                  name="checkbox"
-                  onChange={() => handleCheckItem(item)}
-                />
-                {item.name}
-              </Label>
-              <button onClick={() => handleRemoveItem(item.id)}>X</button>
-            </ListItem>
-          ))}
+          {Object.entries(groupedItems)
+            .sort(
+              ([catA], [catB]) =>
+                categories.indexOf(catA) - categories.indexOf(catB)
+            )
+            .map(([category, itemsInCategory]) => (
+              <div key={category}>
+                <Category>
+                  {categoryDisplay[category as CategoryType]?.emoji || "🛒"}{" "}
+                  {categoryDisplay[category as CategoryType]?.name ||
+                    category.charAt(0).toUpperCase() + category.slice(1)}
+                </Category>
+                {itemsInCategory.map((item) => (
+                  <ListItem key={item.id}>
+                    <Label>
+                      <CheckboxInput
+                        type="checkbox"
+                        name="checkbox"
+                        onChange={() => handleCheckItem(item)}
+                      />
+                      {item.name}
+                      <button
+                        onClick={() => handleRemoveItem(item.id)}
+                        title="Remove item"
+                      >
+                        X
+                      </button>
+                    </Label>
+                  </ListItem>
+                ))}
+              </div>
+            ))}
           {items.length > 4 && (
             <RemoveAllButton onClick={handleRemoveAllListItems}>
               Remove All
@@ -210,11 +471,10 @@ const ShoppingList: React.FC = () => {
             )}{" "}
             {checkedItems.length > 4 && (
               <SortButton onClick={sortCheckedItemsAlphabetically}>
-                A{" "}
-                <span role="img" aria-label="right arrow">
-                  ➡️
+                <span role="img" aria-label="down arrow">
+                  ⬇️
                 </span>{" "}
-                Z
+                Sort A-Z
               </SortButton>
             )}
             {checkedItems.map((item) => (
@@ -222,15 +482,18 @@ const ShoppingList: React.FC = () => {
                 key={item.id}
                 onClick={() => handleReturnToShoppingList(item)}
               >
-                <CheckedItemName>{item.name}</CheckedItemName>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation(); // Prevent the click event from bubbling up
-                    handleRemoveCheckedItem(item.id);
-                  }}
-                >
-                  X
-                </button>
+                <CheckedItemName>
+                  {item.name}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent the click event from bubbling up
+                      handleRemoveCheckedItem(item.id);
+                    }}
+                    title="Remove item"
+                  >
+                    X
+                  </button>
+                </CheckedItemName>
               </CheckedItem>
             ))}
             {checkedItems.length > 4 && (

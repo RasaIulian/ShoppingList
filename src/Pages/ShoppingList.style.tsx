@@ -82,6 +82,19 @@ export const ListItem = styled.li`
   }
 `;
 
+export const Category = styled.h2`
+  display: flex;
+  align-items: center;
+  font-size: 1.6rem;
+  width: 100%;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-right: 0.5rem;
+  margin-top: 1rem;
+  position: relative;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+`;
+
 export const Label = styled.label`
   display: flex;
   align-items: center;
@@ -91,6 +104,7 @@ export const Label = styled.label`
   border-radius: 0.5rem;
   padding: 1rem;
   margin-right: 0.5rem;
+  margin-left: 0.5rem;
   position: relative;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: background-color, box-shadow 0.3s ease;
@@ -125,7 +139,7 @@ export const CheckboxInput = styled.input`
     content: "✔"; /* Unicode for check symbol */
     opacity: 0; /* Initially hide the check symbol */
     position: absolute;
-    top: 0.5rem;
+    top: 1rem;
   }
 `;
 
@@ -146,6 +160,7 @@ export const CheckedItemsList = styled.ul`
 `;
 
 export const CheckedItem = styled.li`
+  position: relative;
   font-size: 1.6rem;
   cursor: pointer;
   color: ${neutralColor};
@@ -165,9 +180,11 @@ export const CheckedItem = styled.li`
   }
   & button {
     /* Styles for the X button */
-    background-color: transparent;
     border: none;
     cursor: pointer;
+    position: absolute;
+    right: 1rem;
+    background-color: transparent;
     color: ${neutralColor};
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
     transition: color 0.3s ease;
@@ -179,6 +196,10 @@ export const CheckedItem = styled.li`
 
 export const CheckedItemName = styled.span`
   margin-right: 0.5rem;
+  display flex;
+  align-items: space-between;
+  justify-content: space-between;
+  font-size: 1.6rem;
 `;
 
 export const Message = styled.p`
