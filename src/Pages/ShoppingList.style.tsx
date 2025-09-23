@@ -81,6 +81,12 @@ export const ListItem = styled.li`
     color: ${secondaryColor};
   }
 `;
+export const CategoryContainer = styled.div`
+  border-bottom: 2px solid rgba(33, 90, 222, 0.5);
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;);
+`;
 
 export const Category = styled.h2`
   display: flex;
