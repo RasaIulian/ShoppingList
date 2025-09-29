@@ -28,14 +28,14 @@ const categories = [
   "fructe/legume",
   "lactate",
   "carne",
-  "panificație",
-  "băuturi",
+  "panificatie",
+  "bauturi",
   "dulciuri",
-  "produse de bază",
+  "produse de baza",
   "conserve",
   "congelate",
-  "curățenie",
-  "igienă personală",
+  "curatenie",
+  "igiena personala",
   "nealimentare",
   "altele",
 ];
@@ -559,13 +559,14 @@ const ShoppingList: React.FC = () => {
           <div
             style={{
               display: "flex",
+              flexWrap: "wrap",
               alignItems: "center",
               gap: "10px",
-              justifyContent: "center",
             }}
           >
             <input
               type="text"
+              name="listNameInput"
               value={tempListName}
               onChange={(e) => setTempListName(e.target.value)}
               onKeyDown={(e) => {
@@ -578,6 +579,7 @@ const ShoppingList: React.FC = () => {
               autoFocus
               style={{
                 fontSize: "28px",
+                width: "60dvw",
                 padding: "5px 10px",
                 border: "2px solid #4CAF50",
                 borderRadius: "5px",
