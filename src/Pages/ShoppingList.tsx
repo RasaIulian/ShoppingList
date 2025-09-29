@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { ref, onValue, set, push, remove, update } from "firebase/database";
+import { database } from "../firebase";
 
 import {
   Container,
@@ -21,6 +23,7 @@ import {
   SortButton,
   Category,
 } from "./ShoppingList.style";
+
 const categories = [
   "fructe/legume",
   "lactate",
@@ -295,126 +298,225 @@ const guessCategory = (productName: string): CategoryType => {
 };
 
 interface ShoppingItem {
-  // Defining the structure of a shopping item
-  id: number;
+  id: string;
   name: string;
   category: CategoryType;
 }
 
+// Get or create list ID
+const getListId = (): string => {
+  const urlParams = new URLSearchParams(window.location.search);
+  let listId = urlParams.get("list");
+
+  if (!listId) {
+    // Check localStorage for existing list
+    listId = localStorage.getItem("currentListId");
+
+    if (!listId) {
+      // Generate new list ID
+      listId = `list_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      localStorage.setItem("currentListId", listId);
+    }
+
+    // Update URL without reload
+    window.history.replaceState({}, "", `?list=${listId}`);
+  } else {
+    // Store the list ID from URL
+    localStorage.setItem("currentListId", listId);
+  }
+
+  return listId;
+};
+
 const ShoppingList: React.FC = () => {
-  // Functional component definition
-  const [items, setItems] = useState<ShoppingItem[]>(() => {
-    const storedItems = localStorage.getItem("shoppingListItems");
-    return storedItems ? JSON.parse(storedItems) : [];
-  });
-  const [inputValue, setInputValue] = useState(""); // State for input field value
-  const [checkedItems, setCheckedItems] = useState<ShoppingItem[]>(() => {
-    const storedCheckedItems = localStorage.getItem("CheckedItems");
-    return storedCheckedItems ? JSON.parse(storedCheckedItems) : [];
-  }); // State for checked items
-  const [error, setError] = useState<string>(""); // State for error messages
+  const [listId] = useState<string>(getListId());
+  const [items, setItems] = useState<ShoppingItem[]>([]);
+  const [inputValue, setInputValue] = useState("");
+  const [checkedItems, setCheckedItems] = useState<ShoppingItem[]>([]);
+  const [error, setError] = useState<string>("");
+  const [shareUrl, setShareUrl] = useState<string>("");
+  const [showShareMessage, setShowShareMessage] = useState(false);
 
-  // Effect to update local storage when shopping list items change
+  // Generate share URL
   useEffect(() => {
-    localStorage.setItem("shoppingListItems", JSON.stringify(items));
-  }, [items]);
+    const url = `${window.location.origin}${window.location.pathname}?list=${listId}`;
+    setShareUrl(url);
+  }, [listId]);
 
-  // Effect to update local storage when checked items change
+  // Listen to items in real-time
   useEffect(() => {
-    localStorage.setItem("CheckedItems", JSON.stringify(checkedItems));
-  }, [checkedItems]);
+    const itemsRef = ref(database, `lists/${listId}/items`);
 
-  // Function to handle adding a new item to the shopping list
-  const handleAddItem = () => {
+    const unsubscribe = onValue(itemsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const itemsArray = Object.entries(data).map(
+          ([id, item]: [string, any]) => ({
+            id,
+            name: item.name,
+            category: item.category,
+          })
+        );
+        setItems(itemsArray);
+      } else {
+        setItems([]);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [listId]);
+
+  // Listen to checked items in real-time
+  useEffect(() => {
+    const checkedItemsRef = ref(database, `lists/${listId}/checkedItems`);
+
+    const unsubscribe = onValue(checkedItemsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const checkedArray = Object.entries(data).map(
+          ([id, item]: [string, any]) => ({
+            id,
+            name: item.name,
+            category: item.category,
+          })
+        );
+        setCheckedItems(checkedArray);
+      } else {
+        setCheckedItems([]);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [listId]);
+
+  const handleAddItem = async () => {
     if (inputValue.trim() !== "") {
       const category = guessCategory(inputValue);
-      const newItem: ShoppingItem = {
-        id: Date.now(), // Generate a unique ID
-        name: inputValue,
-        category: category,
-      };
+      const itemName = inputValue.trim();
 
-      // Check if the item already exists in the shopping list
-      if (
-        items.some(
-          (item) => item.name.toLowerCase() === newItem.name.toLowerCase()
-        )
-      ) {
-        setError(`${newItem.name} is already in the list!`);
-        setInputValue(""); // Clear input field
+      // Check if item already exists
+      const existsInItems = items.some(
+        (item) => item.name.toLowerCase() === itemName.toLowerCase()
+      );
+      const existsInChecked = checkedItems.some(
+        (item) => item.name.toLowerCase() === itemName.toLowerCase()
+      );
+
+      if (existsInItems) {
+        setError(`${itemName} is already in the list!`);
+        setInputValue("");
         return;
-      } else if (
-        checkedItems.some(
-          (item) => item.name.toLowerCase() === newItem.name.toLowerCase()
-        )
-      ) {
-        setError(`${newItem.name} already in checked list ->`);
-        setInputValue(""); // Clear input field
+      } else if (existsInChecked) {
+        setError(`${itemName} already in checked list ->`);
+        setInputValue("");
         return;
       }
 
-      setItems((prevItems) => [...prevItems, newItem]);
-      setInputValue(""); // Clear input field
-      setError(""); // Clear error message
+      // Add to Firebase
+      const itemsRef = ref(database, `lists/${listId}/items`);
+      const newItemRef = push(itemsRef);
+
+      await set(newItemRef, {
+        name: itemName,
+        category: category,
+      });
+
+      setInputValue("");
+      setError("");
     }
   };
 
-  const handleRemoveItem = (itemId: number) => {
-    const updatedItems = items.filter((item) => item.id !== itemId);
-    setItems(updatedItems);
+  const handleRemoveItem = async (itemId: string) => {
+    const itemRef = ref(database, `lists/${listId}/items/${itemId}`);
+    await remove(itemRef);
   };
-  // Function to handle removing a checked item
-  const handleRemoveCheckedItem = (itemId: number) => {
-    const updatedCheckedItems = checkedItems.filter(
-      (item) => item.id !== itemId
+
+  const handleRemoveCheckedItem = async (itemId: string) => {
+    const itemRef = ref(database, `lists/${listId}/checkedItems/${itemId}`);
+    await remove(itemRef);
+  };
+
+  const handleCheckItem = async (checkedItem: ShoppingItem) => {
+    // Remove from items
+    const itemRef = ref(database, `lists/${listId}/items/${checkedItem.id}`);
+    await remove(itemRef);
+
+    // Add to checked items
+    const checkedItemsRef = ref(
+      database,
+      `lists/${listId}/checkedItems/${checkedItem.id}`
     );
-    setCheckedItems(updatedCheckedItems);
+    await set(checkedItemsRef, {
+      name: checkedItem.name,
+      category: checkedItem.category,
+    });
   };
 
-  // Function to handle checking an item
-  const handleCheckItem = (checkedItem: ShoppingItem) => {
-    // Remove the checked item from the shopping list
-    const newItems = items.filter((item) => item.id !== checkedItem.id);
-    setItems(newItems);
-
-    // Add the checked item to the checked items list
-    setCheckedItems((prevCheckedItems) => [...prevCheckedItems, checkedItem]);
-  };
-
-  const handleRemoveAllListItems = () => {
-    setItems([]);
-  };
-  const handleRemoveAllCheckedItems = () => {
-    setCheckedItems([]);
-  };
-
-  // Function to handle returning an item to the shopping list
-  const handleReturnToShoppingList = (returnedItem: ShoppingItem) => {
-    // Remove the returned item from the checked items list
-    const newCheckedItems = checkedItems.filter(
-      (item) => item.id !== returnedItem.id
+  const handleReturnToShoppingList = async (returnedItem: ShoppingItem) => {
+    // Remove from checked items
+    const checkedItemRef = ref(
+      database,
+      `lists/${listId}/checkedItems/${returnedItem.id}`
     );
-    setCheckedItems(newCheckedItems);
+    await remove(checkedItemRef);
 
-    // Add the returned item back to the shopping list
-    setItems((prevItems) => [...prevItems, returnedItem]);
+    // Add back to items
+    const itemsRef = ref(database, `lists/${listId}/items/${returnedItem.id}`);
+    await set(itemsRef, {
+      name: returnedItem.name,
+      category: returnedItem.category,
+    });
+  };
+
+  const handleRemoveAllListItems = async () => {
+    const itemsRef = ref(database, `lists/${listId}/items`);
+    await remove(itemsRef);
+  };
+
+  const handleRemoveAllCheckedItems = async () => {
+    const checkedItemsRef = ref(database, `lists/${listId}/checkedItems`);
+    await remove(checkedItemsRef);
   };
 
   const sortItemsAlphabetically = (items: ShoppingItem[]) => {
     return items.sort((a, b) => a.name.localeCompare(b.name));
   };
 
-  const sortShoppingListAlphabetically = () => {
-    setItems((prevItems) => {
-      const sortedItems = sortItemsAlphabetically([...prevItems]);
-      return sortedItems;
+  const sortShoppingListAlphabetically = async () => {
+    const sortedItems = sortItemsAlphabetically([...items]);
+    const itemsRef = ref(database, `lists/${listId}/items`);
+
+    // Create updates object
+    const updates: any = {};
+    sortedItems.forEach((item) => {
+      updates[item.id] = {
+        name: item.name,
+        category: item.category,
+      };
     });
+
+    await update(itemsRef, updates);
   };
 
-  const sortCheckedItemsAlphabetically = () => {
-    setCheckedItems((prevCheckedItems) => {
-      const sortedCheckedItems = sortItemsAlphabetically([...prevCheckedItems]);
-      return sortedCheckedItems;
+  const sortCheckedItemsAlphabetically = async () => {
+    const sortedCheckedItems = sortItemsAlphabetically([...checkedItems]);
+    const checkedItemsRef = ref(database, `lists/${listId}/checkedItems`);
+
+    const updates: any = {};
+    sortedCheckedItems.forEach((item) => {
+      updates[item.id] = {
+        name: item.name,
+        category: item.category,
+      };
+    });
+
+    await update(checkedItemsRef, updates);
+  };
+
+  const handleShareList = () => {
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      setShowShareMessage(true);
+      setTimeout(() => setShowShareMessage(false), 3000);
     });
   };
 
@@ -427,7 +529,6 @@ const ShoppingList: React.FC = () => {
     return acc;
   }, {} as Record<CategoryType, ShoppingItem[]>);
 
-  // JSX structure for the component
   return (
     <Container>
       <Title>
@@ -436,6 +537,30 @@ const ShoppingList: React.FC = () => {
           🛒
         </span>
       </Title>
+
+      {/* <div style={{ textAlign: "center", marginBottom: "20px" }}>
+        <button
+          onClick={handleShareList}
+          style={{
+            padding: "10px 20px",
+            fontSize: "16px",
+            backgroundColor: "#4CAF50",
+            color: "white",
+            border: "none",
+            borderRadius: "5px",
+            cursor: "pointer",
+          }}
+        >
+          📋 Share List
+        </button>
+        {showShareMessage && (
+          <div
+            style={{ marginTop: "10px", color: "#4CAF50", fontWeight: "bold" }}
+          >
+            Link copied to clipboard! 🎉
+          </div>
+        )}
+      </div> */}
 
       <ListsContainer>
         <List>
@@ -451,7 +576,7 @@ const ShoppingList: React.FC = () => {
               }
             }}
           />
-          {error && <ErrorMessage>{error}</ErrorMessage>}{" "}
+          {error && <ErrorMessage>{error}</ErrorMessage>}
           {items.length > 4 && (
             <SortButton onClick={sortShoppingListAlphabetically}>
               <span role="img" aria-label="right arrow">
@@ -511,7 +636,7 @@ const ShoppingList: React.FC = () => {
               <Message>
                 {"("}Click to bring back to Shopping&nbsp;List{")"}
               </Message>
-            )}{" "}
+            )}
             {checkedItems.length > 4 && (
               <SortButton onClick={sortCheckedItemsAlphabetically}>
                 <span role="img" aria-label="down arrow">
@@ -529,7 +654,7 @@ const ShoppingList: React.FC = () => {
                   {item.name}
                   <button
                     onClick={(e) => {
-                      e.stopPropagation(); // Prevent the click event from bubbling up
+                      e.stopPropagation();
                       handleRemoveCheckedItem(item.id);
                     }}
                     title="Remove item"
