@@ -334,13 +334,25 @@ const ShoppingList: React.FC = () => {
   const [inputValue, setInputValue] = useState("");
   const [checkedItems, setCheckedItems] = useState<ShoppingItem[]>([]);
   const [error, setError] = useState<string>("");
-  const [shareUrl, setShareUrl] = useState<string>("");
-  const [showShareMessage, setShowShareMessage] = useState(false);
+  const [listName, setListName] = useState<string>("Shopping List");
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [tempListName, setTempListName] = useState("");
 
-  // Generate share URL
+  // Listen to list name in real-time
   useEffect(() => {
-    const url = `${window.location.origin}${window.location.pathname}?list=${listId}`;
-    setShareUrl(url);
+    const listNameRef = ref(database, `lists/${listId}/name`);
+
+    const unsubscribe = onValue(listNameRef, (snapshot) => {
+      const name = snapshot.val();
+      if (name) {
+        setListName(name);
+      } else {
+        // Set default name if none exists
+        set(listNameRef, "Shopping List");
+      }
+    });
+
+    return () => unsubscribe();
   }, [listId]);
 
   // Listen to items in real-time
@@ -388,6 +400,24 @@ const ShoppingList: React.FC = () => {
 
     return () => unsubscribe();
   }, [listId]);
+
+  const handleUpdateListName = async () => {
+    if (tempListName.trim() !== "") {
+      const listNameRef = ref(database, `lists/${listId}/name`);
+      await set(listNameRef, tempListName.trim());
+      setIsEditingName(false);
+    }
+  };
+
+  const handleStartEditingName = () => {
+    setTempListName(listName);
+    setIsEditingName(true);
+  };
+
+  const handleCancelEditingName = () => {
+    setIsEditingName(false);
+    setTempListName("");
+  };
 
   const handleAddItem = async () => {
     if (inputValue.trim() !== "") {
@@ -513,13 +543,6 @@ const ShoppingList: React.FC = () => {
     await update(checkedItemsRef, updates);
   };
 
-  const handleShareList = () => {
-    navigator.clipboard.writeText(shareUrl).then(() => {
-      setShowShareMessage(true);
-      setTimeout(() => setShowShareMessage(false), 3000);
-    });
-  };
-
   const groupedItems = items.reduce((acc, item) => {
     const category = item.category;
     if (!acc[category]) {
@@ -532,35 +555,84 @@ const ShoppingList: React.FC = () => {
   return (
     <Container>
       <Title>
-        Shopping List{" "}
-        <span role="img" aria-label="Shopping cart">
-          🛒
-        </span>
-      </Title>
-
-      {/* <div style={{ textAlign: "center", marginBottom: "20px" }}>
-        <button
-          onClick={handleShareList}
-          style={{
-            padding: "10px 20px",
-            fontSize: "16px",
-            backgroundColor: "#4CAF50",
-            color: "white",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer",
-          }}
-        >
-          📋 Share List
-        </button>
-        {showShareMessage && (
+        {isEditingName ? (
           <div
-            style={{ marginTop: "10px", color: "#4CAF50", fontWeight: "bold" }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              justifyContent: "center",
+            }}
           >
-            Link copied to clipboard! 🎉
+            <input
+              type="text"
+              value={tempListName}
+              onChange={(e) => setTempListName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleUpdateListName();
+                } else if (e.key === "Escape") {
+                  handleCancelEditingName();
+                }
+              }}
+              autoFocus
+              style={{
+                fontSize: "28px",
+                padding: "5px 10px",
+                border: "2px solid #4CAF50",
+                borderRadius: "5px",
+                textAlign: "center",
+              }}
+            />
+            <button
+              onClick={handleUpdateListName}
+              title="Confirm"
+              style={{
+                padding: "5px 15px",
+                fontSize: "16px",
+                backgroundColor: "#4CAF50",
+                color: "white",
+                border: "none",
+                borderRadius: "5px",
+                cursor: "pointer",
+              }}
+            >
+              ✓
+            </button>
+            <button
+              onClick={handleCancelEditingName}
+              title="Cancel"
+              style={{
+                padding: "5px 15px",
+                fontSize: "16px",
+                backgroundColor: "#f44336",
+                color: "white",
+                border: "none",
+                borderRadius: "5px",
+                cursor: "pointer",
+              }}
+            >
+              ✕
+            </button>
+          </div>
+        ) : (
+          <div
+            onClick={handleStartEditingName}
+            style={{
+              cursor: "text",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "10px",
+            }}
+            title="Click to edit list name"
+          >
+            {listName}{" "}
+            <span role="img" aria-label="Shopping cart">
+              🛒
+            </span>
           </div>
         )}
-      </div> */}
+      </Title>
 
       <ListsContainer>
         <List>
