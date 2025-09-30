@@ -20,6 +20,50 @@ export const Title = styled.h2`
   color: ${primaryColor};
   font-size: 3rem;
   margin-bottom: 1rem;
+  margin: 0.5rem;
+`;
+
+export const TitleEditContainer = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+`;
+
+export const TitleInput = styled.input`
+  font-size: 3rem;
+  font-weight: bold;
+  color: ${primaryColor};
+  background-color: transparent;
+  border: none;
+  width: 60%;
+  padding: 0.5rem;
+  outline: none;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+  font-family: inherit;
+  border-radius: 0.5rem;
+  transition: background-color, box-shadow 0.3s ease;
+  &:focus {
+    outline: none;
+    background-color: #fafafa;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+`;
+
+export const TitleDisplay = styled.div`
+  cursor: text;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  span {
+    display: inline-block;
+    transition: transform 0.2s ease-in-out;
+  }
+
+  &:hover span {
+    transform: rotate(15deg) scale(1.1);
+  }
 `;
 
 export const Input = styled.input`
@@ -222,7 +266,7 @@ export const RemoveAllButton = styled.button`
   padding: 1rem;
   border-radius: 0.5rem;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
   color: ${secondaryColor};
   &:hover {

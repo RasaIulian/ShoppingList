@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { ref, onValue, set, push, remove, update } from "firebase/database";
 import { database } from "../firebase";
 
@@ -22,6 +22,9 @@ import {
   RemoveAllButton,
   SortButton,
   Category,
+  TitleEditContainer,
+  TitleInput,
+  TitleDisplay,
 } from "./ShoppingList.style";
 
 const categories = [
@@ -301,6 +304,7 @@ interface ShoppingItem {
   id: string;
   name: string;
   category: CategoryType;
+  sortOrder?: number;
 }
 
 // Get or create list ID
@@ -337,6 +341,7 @@ const ShoppingList: React.FC = () => {
   const [listName, setListName] = useState<string>("Shopping List");
   const [isEditingName, setIsEditingName] = useState(false);
   const [tempListName, setTempListName] = useState("");
+  const editContainerRef = useRef<HTMLDivElement>(null);
 
   // Listen to list name in real-time
   useEffect(() => {
@@ -362,13 +367,13 @@ const ShoppingList: React.FC = () => {
     const unsubscribe = onValue(itemsRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
-        const itemsArray = Object.entries(data).map(
-          ([id, item]: [string, any]) => ({
+        const itemsArray = Object.entries(data)
+          .map(([id, item]: [string, any]) => ({
             id,
-            name: item.name,
-            category: item.category,
-          })
-        );
+            ...item,
+          }))
+          .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+
         setItems(itemsArray);
       } else {
         setItems([]);
@@ -385,13 +390,13 @@ const ShoppingList: React.FC = () => {
     const unsubscribe = onValue(checkedItemsRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
-        const checkedArray = Object.entries(data).map(
-          ([id, item]: [string, any]) => ({
+        const checkedArray = Object.entries(data)
+          .map(([id, item]: [string, any]) => ({
             id,
-            name: item.name,
-            category: item.category,
-          })
-        );
+            ...item,
+          }))
+          .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+
         setCheckedItems(checkedArray);
       } else {
         setCheckedItems([]);
@@ -402,12 +407,29 @@ const ShoppingList: React.FC = () => {
   }, [listId]);
 
   const handleUpdateListName = async () => {
-    if (tempListName.trim() !== "") {
+    const newName = tempListName.trim();
+    if (newName !== "") {
       const listNameRef = ref(database, `lists/${listId}/name`);
-      await set(listNameRef, tempListName.trim());
+      await set(listNameRef, newName);
       setIsEditingName(false);
     }
   };
+
+  // Effect to handle clicks outside the editing container
+  useEffect(() => {
+    if (!isEditingName) return; // Only run when editing
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        editContainerRef.current &&
+        !editContainerRef.current.contains(event.target as Node)
+      ) {
+        handleUpdateListName(); // This will now use the current tempListName
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isEditingName, tempListName]); // Rerun when editing starts/stops or temp name changes
 
   const handleStartEditingName = () => {
     setTempListName(listName);
@@ -449,6 +471,7 @@ const ShoppingList: React.FC = () => {
       await set(newItemRef, {
         name: itemName,
         category: category,
+        sortOrder: items.length,
       });
 
       setInputValue("");
@@ -479,6 +502,7 @@ const ShoppingList: React.FC = () => {
     await set(checkedItemsRef, {
       name: checkedItem.name,
       category: checkedItem.category,
+      sortOrder: checkedItems.length,
     });
   };
 
@@ -495,6 +519,7 @@ const ShoppingList: React.FC = () => {
     await set(itemsRef, {
       name: returnedItem.name,
       category: returnedItem.category,
+      sortOrder: items.length,
     });
   };
 
@@ -518,11 +543,9 @@ const ShoppingList: React.FC = () => {
 
     // Create updates object
     const updates: any = {};
-    sortedItems.forEach((item) => {
-      updates[item.id] = {
-        name: item.name,
-        category: item.category,
-      };
+    sortedItems.forEach((item, index) => {
+      // update the sortOrder for each item's ID.
+      updates[`${item.id}/sortOrder`] = index;
     });
 
     await update(itemsRef, updates);
@@ -533,11 +556,8 @@ const ShoppingList: React.FC = () => {
     const checkedItemsRef = ref(database, `lists/${listId}/checkedItems`);
 
     const updates: any = {};
-    sortedCheckedItems.forEach((item) => {
-      updates[item.id] = {
-        name: item.name,
-        category: item.category,
-      };
+    sortedCheckedItems.forEach((item, index) => {
+      updates[`${item.id}/sortOrder`] = index;
     });
 
     await update(checkedItemsRef, updates);
@@ -556,15 +576,8 @@ const ShoppingList: React.FC = () => {
     <Container>
       <Title>
         {isEditingName ? (
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              alignItems: "center",
-              gap: "10px",
-            }}
-          >
-            <input
+          <TitleEditContainer ref={editContainerRef}>
+            <TitleInput
               type="text"
               name="listNameInput"
               value={tempListName}
@@ -577,62 +590,18 @@ const ShoppingList: React.FC = () => {
                 }
               }}
               autoFocus
-              style={{
-                fontSize: "28px",
-                width: "60dvw",
-                padding: "5px 10px",
-                border: "2px solid #4CAF50",
-                borderRadius: "5px",
-                textAlign: "center",
-              }}
             />
-            <button
-              onClick={handleUpdateListName}
-              title="Confirm"
-              style={{
-                padding: "5px 15px",
-                fontSize: "16px",
-                backgroundColor: "#4CAF50",
-                color: "white",
-                border: "none",
-                borderRadius: "5px",
-                cursor: "pointer",
-              }}
-            >
-              ✓
-            </button>
-            <button
-              onClick={handleCancelEditingName}
-              title="Cancel"
-              style={{
-                padding: "5px 15px",
-                fontSize: "16px",
-                backgroundColor: "#f44336",
-                color: "white",
-                border: "none",
-                borderRadius: "5px",
-                cursor: "pointer",
-              }}
-            >
-              ✕
-            </button>
-          </div>
+          </TitleEditContainer>
         ) : (
-          <div
+          <TitleDisplay
             onClick={handleStartEditingName}
-            style={{
-              cursor: "text",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "10px",
-            }}
             title="Click to edit list name"
           >
             {listName}{" "}
             <span role="img" aria-label="Shopping cart">
               🛒
             </span>
-          </div>
+          </TitleDisplay>
         )}
       </Title>
 
@@ -656,7 +625,7 @@ const ShoppingList: React.FC = () => {
               <span role="img" aria-label="right arrow">
                 ⬇️
               </span>{" "}
-              Sort A-Z
+              Sort
             </SortButton>
           )}
           {Object.entries(groupedItems)
@@ -716,7 +685,7 @@ const ShoppingList: React.FC = () => {
                 <span role="img" aria-label="down arrow">
                   ⬇️
                 </span>{" "}
-                Sort A-Z
+                Sort
               </SortButton>
             )}
             {checkedItems.map((item) => (
