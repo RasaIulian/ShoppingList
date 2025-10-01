@@ -415,14 +415,22 @@ const ShoppingList: React.FC = () => {
         setListHistory(updatedHistory);
       } else if (!snapshot.exists()) {
         // The list was likely deleted. We can clear local state or navigate.
-        // For now, we'll just update the name to indicate it's gone.
-        setListName("List not found");
-        removeFromListHistory(listId);
+        const updatedHistory = removeFromListHistory(listId);
+        setListHistory(updatedHistory);
+
+        // Navigate to a different list or create a new one.
+        if (updatedHistory.length > 0) {
+          // Navigate to the most recent list
+          window.location.href = `?list=${updatedHistory[0].id}`;
+        } else {
+          // No other lists in history, create a new one
+          handleNewList();
+        }
       } else {
         // This is a new list, so add it to history with the default name
         const defaultName = "Shopping List";
-        addListToHistory(listId, defaultName);
-        setListHistory(JSON.parse(localStorage.getItem("listHistory") || "[]"));
+        const updatedHistory = addListToHistory(listId, defaultName);
+        setListHistory(updatedHistory);
         // Set default name if none exists
         set(listNameRef, "Shopping List");
       }
