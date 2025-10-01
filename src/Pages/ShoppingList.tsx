@@ -25,6 +25,14 @@ import {
   TitleEditContainer,
   TitleInput,
   TitleDisplay,
+  NewListButton,
+  HistoryButton,
+  HistoryContainer,
+  HistoryDropdown,
+  HistoryList,
+  HistoryListItem,
+  HeaderActionsContainer,
+  RemoveHistoryButton,
 } from "./ShoppingList.style";
 
 const categories = [
@@ -59,6 +67,11 @@ const categoryDisplay: Record<CategoryType, { name: string; emoji: string }> = {
   nealimentare: { name: "Nealimentare", emoji: "🔋" },
   altele: { name: "Altele", emoji: "🛒" },
 };
+
+interface ListHistoryItem {
+  id: string;
+  name: string;
+}
 
 const productCategories: Partial<Record<CategoryType, string[]>> = {
   "fructe/legume": [
@@ -332,6 +345,42 @@ const getListId = (): string => {
   return listId;
 };
 
+const addListToHistory = (listId: string, listName: string) => {
+  const historyString = localStorage.getItem("listHistory");
+  let history: ListHistoryItem[] = historyString
+    ? JSON.parse(historyString)
+    : [];
+  if (!history.some((item) => item.id === listId)) {
+    history.unshift({ id: listId, name: listName });
+    localStorage.setItem("listHistory", JSON.stringify(history.slice(0, 20)));
+  }
+};
+const updateListHistory = (listId: string, listName: string) => {
+  const historyString = localStorage.getItem("listHistory");
+  let history: ListHistoryItem[] = historyString
+    ? JSON.parse(historyString)
+    : [];
+
+  // Remove existing entry for this listId to avoid duplicates
+  history = history.filter((item) => item.id !== listId);
+
+  // Add new/updated entry to the top
+  history.unshift({ id: listId, name: listName });
+
+  // Keep history to a reasonable size, e.g., 20 lists
+  localStorage.setItem("listHistory", JSON.stringify(history.slice(0, 20)));
+};
+
+const removeFromListHistory = (listId: string) => {
+  const historyString = localStorage.getItem("listHistory");
+  if (!historyString) return [];
+
+  let history: ListHistoryItem[] = JSON.parse(historyString);
+  history = history.filter((item) => item.id !== listId);
+  localStorage.setItem("listHistory", JSON.stringify(history));
+  return history;
+};
+
 const ShoppingList: React.FC = () => {
   const [listId] = useState<string>(getListId());
   const [items, setItems] = useState<ShoppingItem[]>([]);
@@ -342,6 +391,9 @@ const ShoppingList: React.FC = () => {
   const [isEditingName, setIsEditingName] = useState(false);
   const [tempListName, setTempListName] = useState("");
   const editContainerRef = useRef<HTMLDivElement>(null);
+  const [showHistory, setShowHistory] = useState(false);
+  const [listHistory, setListHistory] = useState<ListHistoryItem[]>([]);
+  const historyContainerRef = useRef<HTMLDivElement>(null);
 
   // Listen to list name in real-time
   useEffect(() => {
@@ -351,6 +403,8 @@ const ShoppingList: React.FC = () => {
       const name = snapshot.val();
       if (name) {
         setListName(name);
+        addListToHistory(listId, name);
+        updateListHistory(listId, name);
       } else {
         // Set default name if none exists
         set(listNameRef, "Shopping List");
@@ -406,6 +460,39 @@ const ShoppingList: React.FC = () => {
     return () => unsubscribe();
   }, [listId]);
 
+  // Load list history from localStorage
+  useEffect(() => {
+    const historyString = localStorage.getItem("listHistory");
+    if (historyString) {
+      setListHistory(JSON.parse(historyString));
+    }
+  }, [listId]); // Rerun if listId changes to refresh history view
+
+  // Handle clicks outside history dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        historyContainerRef.current &&
+        !historyContainerRef.current.contains(event.target as Node)
+      ) {
+        setShowHistory(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const memoizedHandleUpdateListName = useCallback(async () => {
+    const newName = tempListName.trim();
+    if (newName !== "") {
+      const listNameRef = ref(database, `lists/${listId}/name`);
+      await set(listNameRef, newName);
+      setIsEditingName(false);
+    } else {
+      setIsEditingName(false); // Also exit editing if the name is empty
+    }
+  }, [listId, tempListName]);
+
   const handleUpdateListName = async () => {
     const newName = tempListName.trim();
     if (newName !== "") {
@@ -417,19 +504,18 @@ const ShoppingList: React.FC = () => {
 
   // Effect to handle clicks outside the editing container
   useEffect(() => {
-    if (!isEditingName) return; // Only run when editing
-
     const handleClickOutside = (event: MouseEvent) => {
       if (
+        isEditingName &&
         editContainerRef.current &&
         !editContainerRef.current.contains(event.target as Node)
       ) {
-        handleUpdateListName(); // This will now use the current tempListName
+        memoizedHandleUpdateListName();
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isEditingName, tempListName]); // Rerun when editing starts/stops or temp name changes
+  }, [isEditingName, memoizedHandleUpdateListName]);
 
   const handleStartEditingName = () => {
     setTempListName(listName);
@@ -572,6 +658,50 @@ const ShoppingList: React.FC = () => {
     return acc;
   }, {} as Record<CategoryType, ShoppingItem[]>);
 
+  const handleNewList = () => {
+    // Generate a new list ID but don't navigate immediately
+    const newListId = `list_${Date.now()}_${Math.random()
+      .toString(36)
+      .substr(2, 9)}`;
+    // Set it in localStorage so the new page picks it up
+    localStorage.setItem("currentListId", newListId);
+    // Navigate to the new list URL
+    window.location.href = `?list=${newListId}`;
+  };
+
+  const handleRemoveFromHistory = async (
+    e: React.MouseEvent,
+    listIdToRemove: string,
+    listNameToRemove: string
+  ) => {
+    e.stopPropagation(); // Prevent the dropdown from closing
+
+    const confirmation = window.confirm(
+      `Are you sure you want to permanently delete the list "${listNameToRemove}"? This action cannot be undone.`
+    );
+
+    if (confirmation) {
+      // Remove from Firebase
+      const listRef = ref(database, `lists/${listIdToRemove}`);
+      await remove(listRef);
+
+      // Remove from local history
+      const updatedHistory = removeFromListHistory(listIdToRemove);
+      setListHistory(updatedHistory);
+
+      // If deleting the current list, navigate to the next available list or a new one
+      if (listId === listIdToRemove) {
+        if (updatedHistory.length > 0) {
+          // Navigate to the most recent list in history
+          const nextListId = updatedHistory[0].id;
+          window.location.href = `?list=${nextListId}`;
+        } else {
+          handleNewList();
+        }
+      }
+    }
+  };
+
   return (
     <Container>
       <Title>
@@ -603,6 +733,40 @@ const ShoppingList: React.FC = () => {
             </span>
           </TitleDisplay>
         )}
+        <HeaderActionsContainer>
+          <NewListButton onClick={handleNewList} title="Create a new list">
+            +
+          </NewListButton>
+          <HistoryContainer ref={historyContainerRef}>
+            <HistoryButton
+              title="Saved lists"
+              onClick={() => setShowHistory(!showHistory)}
+            >
+              My lists
+            </HistoryButton>
+            {showHistory && (
+              <HistoryDropdown>
+                <HistoryList>
+                  {listHistory.map((item) => (
+                    <HistoryListItem key={item.id}>
+                      <a href={`?list=${item.id}`} title={item.name}>
+                        {item.name}
+                      </a>
+                      <RemoveHistoryButton
+                        onClick={(e) =>
+                          handleRemoveFromHistory(e, item.id, item.name)
+                        }
+                        title={`Delete "${item.name}" permanently`}
+                      >
+                        &times;
+                      </RemoveHistoryButton>
+                    </HistoryListItem>
+                  ))}
+                </HistoryList>
+              </HistoryDropdown>
+            )}
+          </HistoryContainer>
+        </HeaderActionsContainer>
       </Title>
 
       <ListsContainer>

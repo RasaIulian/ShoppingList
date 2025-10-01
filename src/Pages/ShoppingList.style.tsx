@@ -294,3 +294,102 @@ export const SortButton = styled.button`
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   }
 `;
+
+export const NewListButton = styled.button`
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 1.6rem;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 0.5rem;
+  color: ${primaryColor};
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+
+  &:hover {
+    background-color: ${primaryColor};
+    color: ${neutralColor};
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+`;
+
+export const HistoryButton = styled(NewListButton)``;
+
+export const HistoryDropdown = styled.div`
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: ${neutralColor};
+  border: 1px solid ${primaryColor};
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+  min-width: 200px;
+  max-height: 300px;
+  overflow-y: auto;
+`;
+
+export const HistoryList = styled.ul`
+  list-style: none;
+  margin: 0;
+  padding: 0.5rem;
+`;
+
+export const HistoryListItem = styled.li`
+  padding: 0.8rem 1.2rem;
+  color: ${primaryColor};
+  text-shadow: none;
+  font-size: 1.4rem;
+  white-space: nowrap;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  &:hover {
+    background-color: ${primaryColor};
+    color: ${neutralColor};
+  }
+
+  a {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    flex-grow: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+  }
+`;
+
+export const HistoryContainer = styled.div`
+  position: relative;
+  display: inline-block;
+`;
+
+export const HeaderActionsContainer = styled.div`
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+`;
+
+export const RemoveHistoryButton = styled.button`
+  background: transparent;
+  border: none;
+  color: ${secondaryColor};
+  cursor: pointer;
+  font-size: 1.6rem;
+  padding: 0 0.5rem;
+  margin-left: 1rem;
+  opacity: 0.6;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+
+  &:hover {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+`;
