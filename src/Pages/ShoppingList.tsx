@@ -345,7 +345,10 @@ const getListId = (): string => {
   return listId;
 };
 
-const addListToHistory = (listId: string, listName: string) => {
+const addListToHistory = (
+  listId: string,
+  listName: string
+): ListHistoryItem[] => {
   const historyString = localStorage.getItem("listHistory");
   let history: ListHistoryItem[] = historyString
     ? JSON.parse(historyString)
@@ -354,8 +357,12 @@ const addListToHistory = (listId: string, listName: string) => {
     history.unshift({ id: listId, name: listName });
     localStorage.setItem("listHistory", JSON.stringify(history.slice(0, 20)));
   }
+  return history;
 };
-const updateListHistory = (listId: string, listName: string) => {
+const updateListHistory = (
+  listId: string,
+  listName: string
+): ListHistoryItem[] => {
   const historyString = localStorage.getItem("listHistory");
   let history: ListHistoryItem[] = historyString
     ? JSON.parse(historyString)
@@ -369,6 +376,7 @@ const updateListHistory = (listId: string, listName: string) => {
 
   // Keep history to a reasonable size, e.g., 20 lists
   localStorage.setItem("listHistory", JSON.stringify(history.slice(0, 20)));
+  return history;
 };
 
 const removeFromListHistory = (listId: string) => {
@@ -403,9 +411,18 @@ const ShoppingList: React.FC = () => {
       const name = snapshot.val();
       if (name) {
         setListName(name);
-        addListToHistory(listId, name);
-        updateListHistory(listId, name);
+        const updatedHistory = updateListHistory(listId, name);
+        setListHistory(updatedHistory);
+      } else if (!snapshot.exists()) {
+        // The list was likely deleted. We can clear local state or navigate.
+        // For now, we'll just update the name to indicate it's gone.
+        setListName("List not found");
+        removeFromListHistory(listId);
       } else {
+        // This is a new list, so add it to history with the default name
+        const defaultName = "Shopping List";
+        addListToHistory(listId, defaultName);
+        setListHistory(JSON.parse(localStorage.getItem("listHistory") || "[]"));
         // Set default name if none exists
         set(listNameRef, "Shopping List");
       }
@@ -663,6 +680,18 @@ const ShoppingList: React.FC = () => {
     const newListId = `list_${Date.now()}_${Math.random()
       .toString(36)
       .substr(2, 9)}`;
+
+    // Set default name for the new list in the database immediately
+    const newListRef = ref(database, `lists/${newListId}/name`);
+    set(newListRef, "Shopping List").then(() => {
+      // Add to history and navigate only after the name is set
+      addListToHistory(newListId, "Shopping List");
+      window.location.href = `?list=${newListId}`;
+    });
+
+    // Immediately add the new list to history with a default name
+    addListToHistory(newListId, "Shopping List");
+
     // Set it in localStorage so the new page picks it up
     localStorage.setItem("currentListId", newListId);
     // Navigate to the new list URL
@@ -681,22 +710,29 @@ const ShoppingList: React.FC = () => {
     );
 
     if (confirmation) {
-      // Remove from Firebase
-      const listRef = ref(database, `lists/${listIdToRemove}`);
-      await remove(listRef);
+      // Determine the next list to navigate to *before* deleting
+      const currentHistory = JSON.parse(
+        localStorage.getItem("listHistory") || "[]"
+      ) as ListHistoryItem[];
+      const remainingHistory = currentHistory.filter(
+        (item) => item.id !== listIdToRemove
+      );
 
-      // Remove from local history
+      // 1. Remove from Firebase and wait for it to complete
+      await remove(ref(database, `lists/${listIdToRemove}`));
+
+      // 2. Update local history state
       const updatedHistory = removeFromListHistory(listIdToRemove);
       setListHistory(updatedHistory);
 
-      // If deleting the current list, navigate to the next available list or a new one
+      // 3. If we deleted the list we are on, navigate away
       if (listId === listIdToRemove) {
-        if (updatedHistory.length > 0) {
-          // Navigate to the most recent list in history
-          const nextListId = updatedHistory[0].id;
-          window.location.href = `?list=${nextListId}`;
-        } else {
+        // Only create a new list if the deleted list was the only one that ever existed.
+        if (currentHistory.length === 1) {
           handleNewList();
+        } else if (remainingHistory.length > 0) {
+          const nextListId = remainingHistory[0].id; // Navigate to the next most recent list
+          window.location.href = `?list=${nextListId}`;
         }
       }
     }
@@ -737,35 +773,37 @@ const ShoppingList: React.FC = () => {
           <NewListButton onClick={handleNewList} title="Create a new list">
             +
           </NewListButton>
-          <HistoryContainer ref={historyContainerRef}>
-            <HistoryButton
-              title="Saved lists"
-              onClick={() => setShowHistory(!showHistory)}
-            >
-              My lists
-            </HistoryButton>
-            {showHistory && (
-              <HistoryDropdown>
-                <HistoryList>
-                  {listHistory.map((item) => (
-                    <HistoryListItem key={item.id}>
-                      <a href={`?list=${item.id}`} title={item.name}>
-                        {item.name}
-                      </a>
-                      <RemoveHistoryButton
-                        onClick={(e) =>
-                          handleRemoveFromHistory(e, item.id, item.name)
-                        }
-                        title={`Delete "${item.name}" permanently`}
-                      >
-                        &times;
-                      </RemoveHistoryButton>
-                    </HistoryListItem>
-                  ))}
-                </HistoryList>
-              </HistoryDropdown>
-            )}
-          </HistoryContainer>
+          {listHistory.length > 1 && (
+            <HistoryContainer ref={historyContainerRef}>
+              <HistoryButton
+                title="Saved lists"
+                onClick={() => setShowHistory(!showHistory)}
+              >
+                My lists
+              </HistoryButton>
+              {showHistory && (
+                <HistoryDropdown>
+                  <HistoryList>
+                    {listHistory.map((item) => (
+                      <HistoryListItem key={item.id}>
+                        <a href={`?list=${item.id}`} title={item.name}>
+                          {item.name}
+                        </a>
+                        <RemoveHistoryButton
+                          onClick={(e) =>
+                            handleRemoveFromHistory(e, item.id, item.name)
+                          }
+                          title={`Delete "${item.name}" permanently`}
+                        >
+                          &times;
+                        </RemoveHistoryButton>
+                      </HistoryListItem>
+                    ))}
+                  </HistoryList>
+                </HistoryDropdown>
+              )}
+            </HistoryContainer>
+          )}
         </HeaderActionsContainer>
       </Title>
 
@@ -826,7 +864,7 @@ const ShoppingList: React.FC = () => {
             ))}
           {items.length > 4 && (
             <RemoveAllButton onClick={handleRemoveAllListItems}>
-              Remove All
+              Remove All Items
             </RemoveAllButton>
           )}
         </List>
@@ -873,7 +911,7 @@ const ShoppingList: React.FC = () => {
             ))}
             {checkedItems.length > 4 && (
               <RemoveAllButton onClick={handleRemoveAllCheckedItems}>
-                Remove All
+                Remove All Items
               </RemoveAllButton>
             )}
           </CheckedItemsList>
