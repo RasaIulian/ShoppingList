@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { ref, onValue, set, push, remove, update } from "firebase/database";
-import { database } from "../firebase";
+import { database } from "../utils/firebase";
+import { ref, set, remove } from "firebase/database";
 
 import {
   Container,
@@ -33,292 +33,19 @@ import {
   HistoryListItem,
   HeaderActionsContainer,
   RemoveHistoryButton,
+  ModalOverlay,
+  ModalContent,
+  ModalMessage,
+  ModalActions,
+  ModalButton,
 } from "./ShoppingList.style";
-
-const categories = [
-  "fructe/legume",
-  "lactate",
-  "carne",
-  "panificatie",
-  "bauturi",
-  "dulciuri",
-  "produse de baza",
-  "conserve",
-  "congelate",
-  "curatenie",
-  "igiena personala",
-  "nealimentare",
-  "altele",
-];
-type CategoryType = (typeof categories)[number];
-
-const categoryDisplay: Record<CategoryType, { name: string; emoji: string }> = {
-  "fructe/legume": { name: "Fructe/Legume", emoji: "🍎🥦" },
-  lactate: { name: "Lactate", emoji: "🥛" },
-  carne: { name: "Carne", emoji: "🥩" },
-  panificație: { name: "Panificație", emoji: "🍞" },
-  băuturi: { name: "Băuturi", emoji: "🥤" },
-  dulciuri: { name: "Dulciuri", emoji: "🍬" },
-  "produse de bază": { name: "Produse de bază", emoji: "🧂" },
-  conserve: { name: "Conserve", emoji: "🥫" },
-  congelate: { name: "Congelate", emoji: "🧊" },
-  curățenie: { name: "Curățenie", emoji: "🧽" },
-  "igienă personală": { name: "Igienă Personală", emoji: "🛁" },
-  nealimentare: { name: "Nealimentare", emoji: "🔋" },
-  altele: { name: "Altele", emoji: "🛒" },
-};
-
-interface ListHistoryItem {
-  id: string;
-  name: string;
-}
-
-const productCategories: Partial<Record<CategoryType, string[]>> = {
-  "fructe/legume": [
-    "afine",
-    "ananas",
-    "anghinare",
-    "ardei",
-    "avocado",
-    "banane",
-    "broccoli",
-    "capsuni",
-    "cartofi",
-    "castraveti",
-    "ceapa",
-    "ceapa verde",
-    "cirese",
-    "conopida",
-    "curmale",
-    "dovlecei",
-    "dovlecele",
-    "kiwi",
-    "lamai",
-    "mango",
-    "mazare",
-    "mere",
-    "morcovi",
-    "papaya",
-    "pepene",
-    "pere",
-    "piersici",
-    "portocale",
-    "prune",
-    "ridichi",
-    "rodie",
-    "rosii",
-    "salata",
-    "sfecla",
-    "sparanghel",
-    "struguri",
-    "telina",
-    "usturoi",
-    "varza",
-    "vinete",
-    "zmeura",
-  ],
-  lactate: [
-    "branza de burduf",
-    "branza de vaci",
-    "branza topita",
-    "branza",
-    "cascaval",
-    "cheddar",
-    "cottage",
-    "edam",
-    "feta",
-    "gorgonzola",
-    "gouda",
-    "iaurt",
-    "kefir",
-    "lapte",
-    "lapte batut",
-    "mascarpone",
-    "mozzarella",
-    "parmezan",
-    "ricotta",
-    "smantana",
-    "smantana pentru gatit",
-    "telemea",
-    "unt",
-  ],
-  carne: [
-    "calamar",
-    "calcan",
-    "caracatita",
-    "carnati",
-    "coaste de porc",
-    "costita",
-    "cotlet porc",
-    "crab",
-    "creier",
-    "creveti",
-    "curcan",
-    "ficat",
-    "file de peste",
-    "hering",
-    "homar",
-    "languste",
-    "macrou",
-    "mici",
-    "midii",
-    "miel",
-    "mititei",
-    "muschiulet",
-    "pastrama",
-    "peste",
-    "piept de curcan",
-    "piept de pui",
-    "porc",
-    "pui",
-    "pulpa de pui",
-    "pulpa porc",
-    "pulpe de pui",
-    "rinichi",
-    "salam",
-    "sardine",
-    "slanina",
-    "somon",
-    "sunca",
-    "ton",
-    "vita",
-  ],
-  panificație: [
-    "bagheta",
-    "biscuiti",
-    "branzoaice",
-    "chifle",
-    "cornuri",
-    "covrigi",
-    "cozonac",
-    "croissant",
-    "foccacia",
-    "franzela",
-    "gogoși",
-    "lipie",
-    "orez expandat",
-    "paine",
-    "patiserie",
-    "pita",
-    "placinta",
-    "poale-n brau",
-    "prajitura",
-  ],
-  băuturi: [
-    "apa",
-    "bere",
-    "cafea",
-    "ceai",
-    "gin",
-    "rom",
-    "sampanie",
-    "suc",
-    "vin",
-    "votca",
-    "votka",
-    "whisky",
-  ],
-  dulciuri: [
-    "bomboane",
-    "ciocolata",
-    "fursecuri",
-    "jeleuri",
-    "napolitane",
-    "prajituri",
-  ],
-  conserve: [
-    "conserva de carne",
-    "conserva de ciuperci",
-    "conserva de fasole",
-    "conserva de linte",
-    "conserva de naut",
-    "conserva de peste",
-    "conserva de rosii",
-    "conserve de mazare",
-    "conserve de porumb",
-    "conserve de ton",
-    "zacusca",
-  ],
-  "produse de bază": [
-    "drojdie",
-    "fasole",
-    "faina",
-    "gris",
-    "linte",
-    "malai",
-    "naut",
-    "orez",
-    "otet",
-    "paste",
-    "piper",
-    "sare",
-    "ulei",
-    "zahar",
-  ],
-  congelate: [
-    "cartofi congelati",
-    "fructe de padure congelate",
-    "inghetata",
-    "legume congelate",
-    "pește congelat",
-    "pizza congelata",
-    "pui congelat",
-  ],
-  curățenie: [
-    "bureti",
-    "clor",
-    "detergent",
-    "detergent de vase",
-    "fairy",
-    "saci de gunoi",
-    "solutie de geamuri",
-  ],
-  "igienă personală": [
-    "ata dentara",
-    "deodorant",
-    "dischete demachiante",
-    "gel de dus",
-    "hartie igienica",
-    "pasta de dinti",
-    "periuta de dinti",
-    "sapun",
-    "sapun lichid",
-    "sampon",
-  ],
-  nealimentare: [
-    "baterii",
-    "becuri",
-    "chibrituri",
-    "folie alimentara",
-    "hartie de copt",
-    "lumanari",
-    "servetele umede",
-    "sfoara",
-  ],
-};
-
-const productCategoryMap: Record<string, CategoryType> = Object.entries(
-  productCategories
-).reduce((acc, [category, products]) => {
-  if (products) {
-    products.forEach((product) => {
-      acc[product] = category as CategoryType;
-    });
-  }
-  return acc;
-}, {} as Record<string, CategoryType>);
-
-const guessCategory = (productName: string): CategoryType => {
-  const lowerCaseName = productName.trim().toLowerCase();
-  return productCategoryMap[lowerCaseName] || "altele";
-};
-
-interface ShoppingItem {
-  id: string;
-  name: string;
-  category: CategoryType;
-  sortOrder?: number;
-}
+import { useShoppingList, ShoppingItem } from "../hooks/useShoppingList";
+import { useListHistory, ListHistoryItem } from "../hooks/useListHistory";
+import {
+  categories,
+  categoryDisplay,
+  CategoryType,
+} from "../utils/categoryGuesser";
 
 // Get or create list ID
 const getListId = (): string => {
@@ -345,153 +72,74 @@ const getListId = (): string => {
   return listId;
 };
 
-const addListToHistory = (
-  listId: string,
-  listName: string
-): ListHistoryItem[] => {
-  const historyString = localStorage.getItem("listHistory");
-  let history: ListHistoryItem[] = historyString
-    ? JSON.parse(historyString)
-    : [];
-  if (!history.some((item) => item.id === listId)) {
-    history.unshift({ id: listId, name: listName });
-    localStorage.setItem("listHistory", JSON.stringify(history.slice(0, 20)));
-  }
-  return history;
-};
-const updateListHistory = (
-  listId: string,
-  listName: string
-): ListHistoryItem[] => {
-  const historyString = localStorage.getItem("listHistory");
-  let history: ListHistoryItem[] = historyString
-    ? JSON.parse(historyString)
-    : [];
-
-  // Remove existing entry for this listId to avoid duplicates
-  history = history.filter((item) => item.id !== listId);
-
-  // Add new/updated entry to the top
-  history.unshift({ id: listId, name: listName });
-
-  // Keep history to a reasonable size, e.g., 20 lists
-  localStorage.setItem("listHistory", JSON.stringify(history.slice(0, 20)));
-  return history;
-};
-
-const removeFromListHistory = (listId: string) => {
-  const historyString = localStorage.getItem("listHistory");
-  if (!historyString) return [];
-
-  let history: ListHistoryItem[] = JSON.parse(historyString);
-  history = history.filter((item) => item.id !== listId);
-  localStorage.setItem("listHistory", JSON.stringify(history));
-  return history;
-};
-
 const ShoppingList: React.FC = () => {
-  const [listId] = useState<string>(getListId());
-  const [items, setItems] = useState<ShoppingItem[]>([]);
+  const [listId, setListId] = useState<string | null>(null);
   const [inputValue, setInputValue] = useState("");
-  const [checkedItems, setCheckedItems] = useState<ShoppingItem[]>([]);
-  const [error, setError] = useState<string>("");
-  const [listName, setListName] = useState<string>("Shopping List");
   const [isEditingName, setIsEditingName] = useState(false);
   const [tempListName, setTempListName] = useState("");
+  const [listNameError, setListNameError] = useState<string | null>(null);
   const editContainerRef = useRef<HTMLDivElement>(null);
   const [showHistory, setShowHistory] = useState(false);
-  const [listHistory, setListHistory] = useState<ListHistoryItem[]>([]);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [listToDelete, setListToDelete] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
   const historyContainerRef = useRef<HTMLDivElement>(null);
+  const {
+    listHistory,
+    addListToHistory,
+    updateListHistoryName,
+    removeFromListHistory,
+    historyError,
+  } = useListHistory();
 
-  // Listen to list name in real-time
-  useEffect(() => {
-    const listNameRef = ref(database, `lists/${listId}/name`);
+  const handleNewList = useCallback(async () => {
+    // Generate a new list ID but don't navigate immediately
+    const newListId = `list_${Date.now()}_${Math.random()
+      .toString(36)
+      .substr(2, 9)}`;
 
-    const unsubscribe = onValue(listNameRef, (snapshot) => {
-      const name = snapshot.val();
-      if (name) {
-        setListName(name);
-        const updatedHistory = updateListHistory(listId, name);
-        setListHistory(updatedHistory);
-      } else if (!snapshot.exists()) {
-        // The list was likely deleted. We can clear local state or navigate.
-        const updatedHistory = removeFromListHistory(listId);
-        setListHistory(updatedHistory);
+    // Find a unique name for the new list
+    let newListName = "Shopping List";
+    let counter = 2;
+    const existingNames = new Set(listHistory.map((item) => item.name));
 
-        // Navigate to a different list or create a new one.
-        if (updatedHistory.length > 0) {
-          // Navigate to the most recent list
-          window.location.href = `?list=${updatedHistory[0].id}`;
-        } else {
-          // No other lists in history, create a new one
-          handleNewList();
-        }
-      } else {
-        // This is a new list, so add it to history with the default name
-        const defaultName = "Shopping List";
-        const updatedHistory = addListToHistory(listId, defaultName);
-        setListHistory(updatedHistory);
-        // Set default name if none exists
-        set(listNameRef, "Shopping List");
-      }
-    });
-
-    return () => unsubscribe();
-  }, [listId]);
-
-  // Listen to items in real-time
-  useEffect(() => {
-    const itemsRef = ref(database, `lists/${listId}/items`);
-
-    const unsubscribe = onValue(itemsRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        const itemsArray = Object.entries(data)
-          .map(([id, item]: [string, any]) => ({
-            id,
-            ...item,
-          }))
-          .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
-
-        setItems(itemsArray);
-      } else {
-        setItems([]);
-      }
-    });
-
-    return () => unsubscribe();
-  }, [listId]);
-
-  // Listen to checked items in real-time
-  useEffect(() => {
-    const checkedItemsRef = ref(database, `lists/${listId}/checkedItems`);
-
-    const unsubscribe = onValue(checkedItemsRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        const checkedArray = Object.entries(data)
-          .map(([id, item]: [string, any]) => ({
-            id,
-            ...item,
-          }))
-          .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
-
-        setCheckedItems(checkedArray);
-      } else {
-        setCheckedItems([]);
-      }
-    });
-
-    return () => unsubscribe();
-  }, [listId]);
-
-  // Load list history from localStorage
-  useEffect(() => {
-    const historyString = localStorage.getItem("listHistory");
-    if (historyString) {
-      setListHistory(JSON.parse(historyString));
+    while (existingNames.has(newListName)) {
+      newListName = `Shopping List ${counter}`;
+      counter++;
     }
-  }, [listId]); // Rerun if listId changes to refresh history view
+
+    // Try to add to history first to respect the limit
+    const wasAdded = addListToHistory(newListId, newListName);
+
+    if (wasAdded) {
+      // Set default name for the new list in the database immediately
+      const newListRef = ref(database, `lists/${newListId}/name`);
+      await set(newListRef, newListName);
+      window.location.href = `?list=${newListId}`;
+    }
+  }, [addListToHistory, listHistory]);
+
+  useEffect(() => {
+    setListId(getListId());
+  }, []);
+
+  const handleListNotFound = useCallback(
+    (notFoundListId: string) => {
+      const remainingHistory = removeFromListHistory(notFoundListId);
+
+      // If we are on the page of the deleted list, navigate away.
+      if (listId === notFoundListId) {
+        if (remainingHistory.length > 0) {
+          window.location.href = `?list=${remainingHistory[0].id}`;
+        } else {
+          handleNewList(); // Or create a new one if no history is left
+        }
+      }
+    },
+    [listId, removeFromListHistory, handleNewList]
+  );
 
   // Handle clicks outside history dropdown
   useEffect(() => {
@@ -507,25 +155,64 @@ const ShoppingList: React.FC = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const memoizedHandleUpdateListName = useCallback(async () => {
-    const newName = tempListName.trim();
-    if (newName !== "") {
-      const listNameRef = ref(database, `lists/${listId}/name`);
-      await set(listNameRef, newName);
-      setIsEditingName(false);
-    } else {
-      setIsEditingName(false); // Also exit editing if the name is empty
-    }
-  }, [listId, tempListName]);
+  const {
+    items,
+    checkedItems,
+    listName,
+    error,
+    loading,
+    addItem,
+    updateListName,
+    removeItem,
+    removeCheckedItem,
+    checkItem,
+    uncheckItem,
+    removeAllItems,
+    removeAllCheckedItems,
+    sortItemsAlphabetically,
+    sortCheckedItemsAlphabetically,
+  } = useShoppingList(listId, handleListNotFound);
 
-  const handleUpdateListName = async () => {
-    const newName = tempListName.trim();
-    if (newName !== "") {
-      const listNameRef = ref(database, `lists/${listId}/name`);
-      await set(listNameRef, newName);
-      setIsEditingName(false);
+  // Add new list to history or update its name when listName changes
+  useEffect(() => {
+    if (listId && listName) {
+      addListToHistory(listId, listName);
     }
-  };
+  }, [listId, listName, addListToHistory]);
+
+  const handleUpdateListName = useCallback(
+    async (nameToUpdate: string) => {
+      setListNameError(null);
+      const newName = nameToUpdate.trim();
+
+      if (newName === "") {
+        setListNameError("List name cannot be empty.");
+        return;
+      }
+
+      const isNameTaken = listHistory.some(
+        (item) =>
+          item.id !== listId &&
+          item.name.toLowerCase() === newName.toLowerCase()
+      );
+
+      if (isNameTaken) {
+        const errorMsg = `Sorry, a list named "${newName}" already exists.`;
+        setListNameError(errorMsg);
+        setTempListName(listName); // Revert the input to the original name
+        // Show error and stay in editing mode for the user to correct it.
+        setTimeout(() => setListNameError(null), 3000);
+        return;
+      }
+
+      await updateListName(newName);
+      if (listId) {
+        updateListHistoryName(listId, newName);
+      }
+      setIsEditingName(false);
+    },
+    [updateListName, listId, updateListHistoryName, listHistory, listName]
+  );
 
   // Effect to handle clicks outside the editing container
   useEffect(() => {
@@ -535,12 +222,12 @@ const ShoppingList: React.FC = () => {
         editContainerRef.current &&
         !editContainerRef.current.contains(event.target as Node)
       ) {
-        memoizedHandleUpdateListName();
+        handleUpdateListName(tempListName);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isEditingName, memoizedHandleUpdateListName]);
+  }, [isEditingName, tempListName, handleUpdateListName]);
 
   const handleStartEditingName = () => {
     setTempListName(listName);
@@ -549,129 +236,15 @@ const ShoppingList: React.FC = () => {
 
   const handleCancelEditingName = () => {
     setIsEditingName(false);
+    setListNameError(null);
     setTempListName("");
   };
 
   const handleAddItem = async () => {
     if (inputValue.trim() !== "") {
-      const category = guessCategory(inputValue);
-      const itemName = inputValue.trim();
-
-      // Check if item already exists
-      const existsInItems = items.some(
-        (item) => item.name.toLowerCase() === itemName.toLowerCase()
-      );
-      const existsInChecked = checkedItems.some(
-        (item) => item.name.toLowerCase() === itemName.toLowerCase()
-      );
-
-      if (existsInItems) {
-        setError(`${itemName} is already in the list!`);
-        setInputValue("");
-        return;
-      } else if (existsInChecked) {
-        setError(`${itemName} already in checked list ->`);
-        setInputValue("");
-        return;
-      }
-
-      // Add to Firebase
-      const itemsRef = ref(database, `lists/${listId}/items`);
-      const newItemRef = push(itemsRef);
-
-      await set(newItemRef, {
-        name: itemName,
-        category: category,
-        sortOrder: items.length,
-      });
-
+      await addItem(inputValue);
       setInputValue("");
-      setError("");
     }
-  };
-
-  const handleRemoveItem = async (itemId: string) => {
-    const itemRef = ref(database, `lists/${listId}/items/${itemId}`);
-    await remove(itemRef);
-  };
-
-  const handleRemoveCheckedItem = async (itemId: string) => {
-    const itemRef = ref(database, `lists/${listId}/checkedItems/${itemId}`);
-    await remove(itemRef);
-  };
-
-  const handleCheckItem = async (checkedItem: ShoppingItem) => {
-    // Remove from items
-    const itemRef = ref(database, `lists/${listId}/items/${checkedItem.id}`);
-    await remove(itemRef);
-
-    // Add to checked items
-    const checkedItemsRef = ref(
-      database,
-      `lists/${listId}/checkedItems/${checkedItem.id}`
-    );
-    await set(checkedItemsRef, {
-      name: checkedItem.name,
-      category: checkedItem.category,
-      sortOrder: checkedItems.length,
-    });
-  };
-
-  const handleReturnToShoppingList = async (returnedItem: ShoppingItem) => {
-    // Remove from checked items
-    const checkedItemRef = ref(
-      database,
-      `lists/${listId}/checkedItems/${returnedItem.id}`
-    );
-    await remove(checkedItemRef);
-
-    // Add back to items
-    const itemsRef = ref(database, `lists/${listId}/items/${returnedItem.id}`);
-    await set(itemsRef, {
-      name: returnedItem.name,
-      category: returnedItem.category,
-      sortOrder: items.length,
-    });
-  };
-
-  const handleRemoveAllListItems = async () => {
-    const itemsRef = ref(database, `lists/${listId}/items`);
-    await remove(itemsRef);
-  };
-
-  const handleRemoveAllCheckedItems = async () => {
-    const checkedItemsRef = ref(database, `lists/${listId}/checkedItems`);
-    await remove(checkedItemsRef);
-  };
-
-  const sortItemsAlphabetically = (items: ShoppingItem[]) => {
-    return items.sort((a, b) => a.name.localeCompare(b.name));
-  };
-
-  const sortShoppingListAlphabetically = async () => {
-    const sortedItems = sortItemsAlphabetically([...items]);
-    const itemsRef = ref(database, `lists/${listId}/items`);
-
-    // Create updates object
-    const updates: any = {};
-    sortedItems.forEach((item, index) => {
-      // update the sortOrder for each item's ID.
-      updates[`${item.id}/sortOrder`] = index;
-    });
-
-    await update(itemsRef, updates);
-  };
-
-  const sortCheckedItemsAlphabetically = async () => {
-    const sortedCheckedItems = sortItemsAlphabetically([...checkedItems]);
-    const checkedItemsRef = ref(database, `lists/${listId}/checkedItems`);
-
-    const updates: any = {};
-    sortedCheckedItems.forEach((item, index) => {
-      updates[`${item.id}/sortOrder`] = index;
-    });
-
-    await update(checkedItemsRef, updates);
   };
 
   const groupedItems = items.reduce((acc, item) => {
@@ -683,68 +256,48 @@ const ShoppingList: React.FC = () => {
     return acc;
   }, {} as Record<CategoryType, ShoppingItem[]>);
 
-  const handleNewList = () => {
-    // Generate a new list ID but don't navigate immediately
-    const newListId = `list_${Date.now()}_${Math.random()
-      .toString(36)
-      .substr(2, 9)}`;
-
-    // Set default name for the new list in the database immediately
-    const newListRef = ref(database, `lists/${newListId}/name`);
-    set(newListRef, "Shopping List").then(() => {
-      // Add to history and navigate only after the name is set
-      addListToHistory(newListId, "Shopping List");
-      window.location.href = `?list=${newListId}`;
-    });
-
-    // Immediately add the new list to history with a default name
-    addListToHistory(newListId, "Shopping List");
-
-    // Set it in localStorage so the new page picks it up
-    localStorage.setItem("currentListId", newListId);
-    // Navigate to the new list URL
-    window.location.href = `?list=${newListId}`;
-  };
-
-  const handleRemoveFromHistory = async (
-    e: React.MouseEvent,
+  const handleOpenConfirmModal = (
+    e: React.MouseEvent<HTMLButtonElement>,
     listIdToRemove: string,
     listNameToRemove: string
   ) => {
     e.stopPropagation(); // Prevent the dropdown from closing
+    e.preventDefault();
+    setListToDelete({ id: listIdToRemove, name: listNameToRemove });
+    setIsConfirmModalOpen(true);
+    setShowHistory(false); // Close dropdown
+  };
 
-    const confirmation = window.confirm(
-      `Are you sure you want to permanently delete the list "${listNameToRemove}"? This action cannot be undone.`
-    );
+  const handleConfirmDelete = async () => {
+    if (!listToDelete) return;
 
-    if (confirmation) {
-      // Determine the next list to navigate to *before* deleting
-      const currentHistory = JSON.parse(
-        localStorage.getItem("listHistory") || "[]"
-      ) as ListHistoryItem[];
-      const remainingHistory = currentHistory.filter(
-        (item) => item.id !== listIdToRemove
-      );
-
-      // 1. Remove from Firebase and wait for it to complete
-      await remove(ref(database, `lists/${listIdToRemove}`));
+    try {
+      // 1. Remove from Firebase
+      await remove(ref(database, `lists/${listToDelete.id}`));
 
       // 2. Update local history state
-      const updatedHistory = removeFromListHistory(listIdToRemove);
-      setListHistory(updatedHistory);
+      const remainingHistory = removeFromListHistory(listToDelete.id);
 
       // 3. If we deleted the list we are on, navigate away
-      if (listId === listIdToRemove) {
-        // Only create a new list if the deleted list was the only one that ever existed.
-        if (currentHistory.length === 1) {
-          handleNewList();
-        } else if (remainingHistory.length > 0) {
-          const nextListId = remainingHistory[0].id; // Navigate to the next most recent list
-          window.location.href = `?list=${nextListId}`;
-        }
+      if (listId === listToDelete.id) {
+        const nextListId =
+          remainingHistory.length > 0 ? remainingHistory[0].id : null;
+        window.location.href = nextListId
+          ? `?list=${nextListId}`
+          : window.location.pathname;
       }
+    } catch (error) {
+      console.error("Failed to delete list:", error);
+      // Optionally, show an error message to the user
+    } finally {
+      setIsConfirmModalOpen(false);
+      setListToDelete(null);
     }
   };
+
+  if (loading) {
+    return <Container>Loading...</Container>;
+  }
 
   return (
     <Container>
@@ -758,13 +311,14 @@ const ShoppingList: React.FC = () => {
               onChange={(e) => setTempListName(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
-                  handleUpdateListName();
+                  handleUpdateListName(tempListName);
                 } else if (e.key === "Escape") {
                   handleCancelEditingName();
                 }
               }}
               autoFocus
             />
+            {listNameError && <ErrorMessage>{listNameError}</ErrorMessage>}
           </TitleEditContainer>
         ) : (
           <TitleDisplay
@@ -792,14 +346,14 @@ const ShoppingList: React.FC = () => {
               {showHistory && (
                 <HistoryDropdown>
                   <HistoryList>
-                    {listHistory.map((item) => (
+                    {listHistory.map((item: ListHistoryItem) => (
                       <HistoryListItem key={item.id}>
                         <a href={`?list=${item.id}`} title={item.name}>
                           {item.name}
                         </a>
                         <RemoveHistoryButton
                           onClick={(e) =>
-                            handleRemoveFromHistory(e, item.id, item.name)
+                            handleOpenConfirmModal(e, item.id, item.name)
                           }
                           title={`Delete "${item.name}" permanently`}
                         >
@@ -813,7 +367,28 @@ const ShoppingList: React.FC = () => {
             </HistoryContainer>
           )}
         </HeaderActionsContainer>
+        {historyError && <ErrorMessage>{historyError}</ErrorMessage>}
       </Title>
+
+      {isConfirmModalOpen && listToDelete && (
+        <ModalOverlay>
+          <ModalContent>
+            <ModalMessage>
+              Are you sure you want to permanently delete the list "
+              <strong>{listToDelete.name}</strong>"? This action cannot be
+              undone.
+            </ModalMessage>
+            <ModalActions>
+              <ModalButton onClick={() => setIsConfirmModalOpen(false)}>
+                Cancel
+              </ModalButton>
+              <ModalButton color="danger" onClick={handleConfirmDelete}>
+                Delete
+              </ModalButton>
+            </ModalActions>
+          </ModalContent>
+        </ModalOverlay>
+      )}
 
       <ListsContainer>
         <List>
@@ -831,15 +406,16 @@ const ShoppingList: React.FC = () => {
           />
           {error && <ErrorMessage>{error}</ErrorMessage>}
           {items.length > 4 && (
-            <SortButton onClick={sortShoppingListAlphabetically}>
+            <SortButton onClick={sortItemsAlphabetically}>
               <span role="img" aria-label="right arrow">
                 ⬇️
               </span>{" "}
               Sort
             </SortButton>
           )}
-          {Object.entries(groupedItems)
+          {(Object.entries(groupedItems) as [CategoryType, ShoppingItem[]][])
             .sort(
+              // Sorting categories based on predefined order
               ([catA], [catB]) =>
                 categories.indexOf(catA) - categories.indexOf(catB)
             )
@@ -850,17 +426,17 @@ const ShoppingList: React.FC = () => {
                   {categoryDisplay[category as CategoryType]?.name ||
                     category.charAt(0).toUpperCase() + category.slice(1)}
                 </Category>
-                {itemsInCategory.map((item) => (
+                {itemsInCategory.map((item: ShoppingItem) => (
                   <ListItem key={item.id}>
                     <Label>
                       <CheckboxInput
                         type="checkbox"
                         name="checkbox"
-                        onChange={() => handleCheckItem(item)}
+                        onChange={() => checkItem(item)}
                       />
                       {item.name}
                       <button
-                        onClick={() => handleRemoveItem(item.id)}
+                        onClick={() => removeItem(item.id)}
                         title="Remove item"
                       >
                         X
@@ -871,7 +447,7 @@ const ShoppingList: React.FC = () => {
               </CategoryContainer>
             ))}
           {items.length > 4 && (
-            <RemoveAllButton onClick={handleRemoveAllListItems}>
+            <RemoveAllButton onClick={removeAllItems}>
               Remove All Items
             </RemoveAllButton>
           )}
@@ -898,17 +474,14 @@ const ShoppingList: React.FC = () => {
                 Sort
               </SortButton>
             )}
-            {checkedItems.map((item) => (
-              <CheckedItem
-                key={item.id}
-                onClick={() => handleReturnToShoppingList(item)}
-              >
+            {checkedItems.map((item: ShoppingItem) => (
+              <CheckedItem key={item.id} onClick={() => uncheckItem(item)}>
                 <CheckedItemName>
                   {item.name}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleRemoveCheckedItem(item.id);
+                      removeCheckedItem(item.id);
                     }}
                     title="Remove item"
                   >
@@ -918,7 +491,7 @@ const ShoppingList: React.FC = () => {
               </CheckedItem>
             ))}
             {checkedItems.length > 4 && (
-              <RemoveAllButton onClick={handleRemoveAllCheckedItems}>
+              <RemoveAllButton onClick={removeAllCheckedItems}>
                 Remove All Items
               </RemoveAllButton>
             )}

@@ -89,6 +89,7 @@ export const ErrorMessage = styled.p`
   font-size: 1.6rem;
   margin-bottom: 0.5rem;
 `;
+
 export const ListsContainer = styled.div`
   display: flex;
   justify-content: space-between;
@@ -391,5 +392,58 @@ export const RemoveHistoryButton = styled.button`
   &:hover {
     opacity: 1;
     transform: scale(1.2);
+  }
+`;
+
+export const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+`;
+
+export const ModalContent = styled.div`
+  background: ${neutralColor};
+  padding: 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  max-width: 400px;
+  width: 90%;
+  color: #333;
+  text-shadow: none;
+`;
+
+export const ModalMessage = styled.p`
+  margin-bottom: 1.5rem;
+  font-size: 1.6rem;
+  line-height: 1.5;
+`;
+
+export const ModalActions = styled.div`
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+`;
+
+export const ModalButton = styled.button`
+  padding: 0.8rem 1.6rem;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+  font-size: 1.6rem;
+  background-color: ${(props) =>
+    props.color === "danger" ? secondaryColor : primaryColor};
+  color: white;
+  transition: opacity 0.2s;
+
+  &:hover {
+    opacity: 0.85;
   }
 `;
