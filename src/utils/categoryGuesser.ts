@@ -80,6 +80,7 @@ const productCategories: Partial<Record<CategoryType, string[]>> = {
     "varza",
     "vinete",
     "zmeura",
+    "ciuperci",
   ],
   [CATEGORIES.LACTATE.key]: [
     "branza de burduf",
@@ -158,6 +159,7 @@ const productCategories: Partial<Record<CategoryType, string[]>> = {
     "croissant",
     "foccacia",
     "franzela",
+    "toast",
     "gogoși",
     "lipie",
     "orez expandat",
@@ -277,6 +279,19 @@ const productCategoryMap: Record<string, CategoryType> = Object.entries(
 // Function to guess the category of a product based on its name.
 export const guessCategory = (productName: string): CategoryType => {
   const lowerCaseName = productName.trim().toLowerCase();
-  // Returns the guessed category or "altele" (other) if no match is found.
-  return productCategoryMap[lowerCaseName] || CATEGORIES.ALTELE.key;
+  let bestMatch: { category: CategoryType; length: number } | null = null;
+
+  for (const keyword of Object.keys(productCategoryMap)) {
+    if (
+      lowerCaseName.includes(keyword) &&
+      (!bestMatch || keyword.length > bestMatch.length)
+    ) {
+      bestMatch = {
+        category: productCategoryMap[keyword],
+        length: keyword.length,
+      };
+    }
+  }
+
+  return bestMatch ? bestMatch.category : CATEGORIES.ALTELE.key;
 };
