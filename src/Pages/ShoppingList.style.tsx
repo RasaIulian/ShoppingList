@@ -137,7 +137,6 @@ export const Category = styled.h2`
   display: flex;
   align-items: center;
   font-size: 1.6rem;
-  width: 100%;
   border-radius: 0.5rem;
   padding: 1rem;
   margin-right: 0.5rem;
