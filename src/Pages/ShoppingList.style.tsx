@@ -118,7 +118,7 @@ export const ListItem = styled.li`
     border: none;
     cursor: pointer;
     position: absolute;
-    right: 1rem;
+    right: 1.5rem;
     transition: color 0.3s ease;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
   }
@@ -233,7 +233,7 @@ export const CheckedItem = styled.li`
     border: none;
     cursor: pointer;
     position: absolute;
-    right: 1rem;
+    right: 1.5rem;
     background-color: transparent;
     color: ${neutralColor};
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);

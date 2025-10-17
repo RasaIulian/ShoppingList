@@ -435,13 +435,13 @@ const ShoppingList: React.FC = () => {
                         onChange={() => checkItem(item)}
                       />
                       {item.name}
-                      <button
-                        onClick={() => removeItem(item.id)}
-                        title="Remove item"
-                      >
-                        X
-                      </button>
                     </Label>
+                    <button
+                      onClick={() => removeItem(item.id)}
+                      title="Remove item"
+                    >
+                      X
+                    </button>
                   </ListItem>
                 ))}
               </CategoryContainer>
@@ -476,18 +476,16 @@ const ShoppingList: React.FC = () => {
             )}
             {checkedItems.map((item: ShoppingItem) => (
               <CheckedItem key={item.id} onClick={() => uncheckItem(item)}>
-                <CheckedItemName>
-                  {item.name}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeCheckedItem(item.id);
-                    }}
-                    title="Remove item"
-                  >
-                    X
-                  </button>
-                </CheckedItemName>
+                <CheckedItemName>{item.name}</CheckedItemName>{" "}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeCheckedItem(item.id);
+                  }}
+                  title="Remove item"
+                >
+                  X
+                </button>
               </CheckedItem>
             ))}
             {checkedItems.length > 4 && (
