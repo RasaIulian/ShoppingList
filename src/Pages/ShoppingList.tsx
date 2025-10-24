@@ -1,51 +1,19 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { database } from "../utils/firebase";
 import { ref, set, remove } from "firebase/database";
-
 import {
   Container,
-  Title,
-  Input,
-  ErrorMessage,
   ListsContainer,
-  List,
-  ListItem,
-  Label,
-  CheckboxInput,
-  CheckedItemsContainer,
-  CheckedItemsTitle,
-  CheckedItemsList,
-  CategoryContainer,
-  CheckedItem,
-  CheckedItemName,
-  Message,
-  RemoveAllButton,
-  SortButton,
-  Category,
-  TitleEditContainer,
-  TitleInput,
-  TitleDisplay,
-  NewListButton,
-  HistoryButton,
-  HistoryContainer,
-  HistoryDropdown,
-  HistoryList,
-  HistoryListItem,
-  HeaderActionsContainer,
-  RemoveHistoryButton,
-  ModalOverlay,
-  ModalContent,
-  ModalMessage,
-  ModalActions,
-  ModalButton,
+  LoadingIndicator,
 } from "./ShoppingList.style";
 import { useShoppingList, ShoppingItem } from "../hooks/useShoppingList";
-import { useListHistory, ListHistoryItem } from "../hooks/useListHistory";
-import {
-  categories,
-  categoryDisplay,
-  CategoryType,
-} from "../utils/categoryGuesser";
+import { useListHistory } from "../hooks/useListHistory";
+import { categoryDisplay, CategoryType as CategoryKey } from "../utils/categories";
+import { getCategoryFromFirebase } from "../utils/firebaseCategoryGuesser";
+import { ListHeader } from "../components/ListHeader";
+import { ItemsList } from "../components/ItemsList";
+import { CheckedItems } from "../components/CheckedItems";
+import { ConfirmDeleteModal } from "../components/ConfirmDeleteModal";
 
 // Get or create list ID
 const getListId = (): string => {
@@ -58,7 +26,7 @@ const getListId = (): string => {
 
     if (!listId) {
       // Generate new list ID
-      listId = `list_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      listId = `list_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
       localStorage.setItem("currentListId", listId);
     }
 
@@ -75,17 +43,12 @@ const getListId = (): string => {
 const ShoppingList: React.FC = () => {
   const [listId, setListId] = useState<string | null>(null);
   const [inputValue, setInputValue] = useState("");
-  const [isEditingName, setIsEditingName] = useState(false);
-  const [tempListName, setTempListName] = useState("");
-  const [listNameError, setListNameError] = useState<string | null>(null);
-  const editContainerRef = useRef<HTMLDivElement>(null);
-  const [showHistory, setShowHistory] = useState(false);
+  const [itemError, setItemError] = useState<string | null>(null);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [listToDelete, setListToDelete] = useState<{
     id: string;
     name: string;
   } | null>(null);
-  const historyContainerRef = useRef<HTMLDivElement>(null);
   const {
     listHistory,
     addListToHistory,
@@ -97,8 +60,8 @@ const ShoppingList: React.FC = () => {
   const handleNewList = useCallback(async () => {
     // Generate a new list ID but don't navigate immediately
     const newListId = `list_${Date.now()}_${Math.random()
-      .toString(36)
-      .substr(2, 9)}`;
+      .toString(36) // e.g., "0.fcv0jotv1j"
+      .slice(2, 11)}`; // -> "fcv0jotv1"
 
     // Find a unique name for the new list
     let newListName = "Shopping List";
@@ -141,20 +104,6 @@ const ShoppingList: React.FC = () => {
     [listId, removeFromListHistory, handleNewList]
   );
 
-  // Handle clicks outside history dropdown
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        historyContainerRef.current &&
-        !historyContainerRef.current.contains(event.target as Node)
-      ) {
-        setShowHistory(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
   const {
     items,
     checkedItems,
@@ -180,81 +129,58 @@ const ShoppingList: React.FC = () => {
     }
   }, [listId, listName, addListToHistory]);
 
-  const handleUpdateListName = useCallback(
-    async (nameToUpdate: string) => {
-      setListNameError(null);
-      const newName = nameToUpdate.trim();
-
-      if (newName === "") {
-        setListNameError("List name cannot be empty.");
-        return;
-      }
-
-      const isNameTaken = listHistory.some(
-        (item) =>
-          item.id !== listId &&
-          item.name.toLowerCase() === newName.toLowerCase()
-      );
-
-      if (isNameTaken) {
-        const errorMsg = `Sorry, a list named "${newName}" already exists.`;
-        setListNameError(errorMsg);
-        setTempListName(listName); // Revert the input to the original name
-        // Show error and stay in editing mode for the user to correct it.
-        setTimeout(() => setListNameError(null), 3000);
-        return;
-      }
-
-      await updateListName(newName);
-      if (listId) {
-        updateListHistoryName(listId, newName);
-      }
-      setIsEditingName(false);
-    },
-    [updateListName, listId, updateListHistoryName, listHistory, listName]
-  );
-
-  // Effect to handle clicks outside the editing container
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        isEditingName &&
-        editContainerRef.current &&
-        !editContainerRef.current.contains(event.target as Node)
-      ) {
-        handleUpdateListName(tempListName);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isEditingName, tempListName, handleUpdateListName]);
-
-  const handleStartEditingName = () => {
-    setTempListName(listName);
-    setIsEditingName(true);
-  };
-
-  const handleCancelEditingName = () => {
-    setIsEditingName(false);
-    setListNameError(null);
-    setTempListName("");
+  const handleUpdateListNameWithHistory = async (newName: string) => {
+    await updateListName(newName);
+    if (listId) {
+      updateListHistoryName(listId, newName);
+    }
   };
 
   const handleAddItem = async () => {
     if (inputValue.trim() !== "") {
-      await addItem(inputValue);
-      setInputValue("");
+      const trimmedItemName = inputValue.trim();
+      const lowerCaseItemName = trimmedItemName.toLowerCase();
+      const isInShoppingList = items.some(
+        (item) => item.name.toLowerCase() === lowerCaseItemName
+      );
+      const isInCheckedList = checkedItems.some(
+        (item) => item.name.toLowerCase() === lowerCaseItemName
+      );
+
+      if (isInShoppingList) {
+        setItemError(`Please add a different product, "${trimmedItemName}" is already on the shopping list.`);
+        setTimeout(() => setItemError(null), 3000);
+        setInputValue("");
+        return;
+      }
+         if (isInCheckedList) {
+        setItemError(`Please click on the product, "${trimmedItemName}" is already on the checked list.`);
+        setTimeout(() => setItemError(null), 3000);
+        setInputValue("");
+        return;
+      }
+
+      try {
+        setItemError(null); // Clear previous errors
+        const category = await getCategoryFromFirebase(trimmedItemName);
+        await addItem(trimmedItemName, category);
+        setInputValue("");
+      } catch (err) {
+          setItemError("Failed to add item. Please try again.");
+          setTimeout(() => setItemError(null), 3000);
+          setInputValue("");
+      }
     }
   };
 
   const groupedItems = items.reduce((acc, item) => {
-    const category = item.category;
+    const category = item.category || "Other"; // Fallback for items without a category
     if (!acc[category]) {
       acc[category] = [];
     }
     acc[category].push(item);
     return acc;
-  }, {} as Record<CategoryType, ShoppingItem[]>);
+  }, {} as Record<CategoryKey, ShoppingItem[]>);
 
   const handleOpenConfirmModal = (
     e: React.MouseEvent<HTMLButtonElement>,
@@ -263,9 +189,8 @@ const ShoppingList: React.FC = () => {
   ) => {
     e.stopPropagation(); // Prevent the dropdown from closing
     e.preventDefault();
-    setListToDelete({ id: listIdToRemove, name: listNameToRemove });
     setIsConfirmModalOpen(true);
-    setShowHistory(false); // Close dropdown
+    setListToDelete({ id: listIdToRemove, name: listNameToRemove });
   };
 
   const handleConfirmDelete = async () => {
@@ -295,206 +220,57 @@ const ShoppingList: React.FC = () => {
     }
   };
 
+  // Find the current list's name from history for a better loading message.
+  const currentListNameFromHistory = listHistory.find(item => item.id === listId)?.name;
+
   if (loading) {
-    return <Container>Loading...</Container>;
+    return (
+      <Container>
+        <LoadingIndicator>Loading {currentListNameFromHistory || "your list"}...</LoadingIndicator>
+      </Container>
+    );
   }
 
   return (
     <Container>
-      <Title>
-        {isEditingName ? (
-          <TitleEditContainer ref={editContainerRef}>
-            <TitleInput
-              type="text"
-              name="listNameInput"
-              value={tempListName}
-              onChange={(e) => setTempListName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  handleUpdateListName(tempListName);
-                } else if (e.key === "Escape") {
-                  handleCancelEditingName();
-                }
-              }}
-              autoFocus
-            />
-            {listNameError && <ErrorMessage>{listNameError}</ErrorMessage>}
-          </TitleEditContainer>
-        ) : (
-          <TitleDisplay
-            onClick={handleStartEditingName}
-            title="Click to edit list name"
-          >
-            {listName}{" "}
-            <span role="img" aria-label="Shopping cart">
-              🛒
-            </span>
-          </TitleDisplay>
-        )}
-        <HeaderActionsContainer>
-          <NewListButton onClick={handleNewList} title="Create a new list">
-            +
-          </NewListButton>
-          {listHistory.length > 1 && (
-            <HistoryContainer ref={historyContainerRef}>
-              <HistoryButton
-                title="Saved lists"
-                onClick={() => setShowHistory(!showHistory)}
-              >
-                My lists
-              </HistoryButton>
-              {showHistory && (
-                <HistoryDropdown>
-                  <HistoryList>
-                    {listHistory.map((item: ListHistoryItem) => (
-                      <HistoryListItem key={item.id}>
-                        <a href={`?list=${item.id}`} title={item.name}>
-                          {item.name}
-                        </a>
-                        <RemoveHistoryButton
-                          onClick={(e) =>
-                            handleOpenConfirmModal(e, item.id, item.name)
-                          }
-                          title={`Delete "${item.name}" permanently`}
-                        >
-                          &times;
-                        </RemoveHistoryButton>
-                      </HistoryListItem>
-                    ))}
-                  </HistoryList>
-                </HistoryDropdown>
-              )}
-            </HistoryContainer>
-          )}
-        </HeaderActionsContainer>
-        {historyError && <ErrorMessage>{historyError}</ErrorMessage>}
-      </Title>
+      <ListHeader
+        listName={listName}
+        listId={listId}
+        listHistory={listHistory}
+        historyError={historyError}
+        onUpdateListName={handleUpdateListNameWithHistory}
+        onNewList={handleNewList}
+        onDeleteList={handleOpenConfirmModal}
+      />
 
-      {isConfirmModalOpen && listToDelete && (
-        <ModalOverlay>
-          <ModalContent>
-            <ModalMessage>
-              Are you sure you want to permanently delete the list "
-              <strong>{listToDelete.name}</strong>"? This action cannot be
-              undone.
-            </ModalMessage>
-            <ModalActions>
-              <ModalButton onClick={() => setIsConfirmModalOpen(false)}>
-                Cancel
-              </ModalButton>
-              <ModalButton color="danger" onClick={handleConfirmDelete}>
-                Delete
-              </ModalButton>
-            </ModalActions>
-          </ModalContent>
-        </ModalOverlay>
-      )}
+      <ConfirmDeleteModal
+        isOpen={isConfirmModalOpen}
+        listToDelete={listToDelete}
+        onClose={() => setIsConfirmModalOpen(false)}
+        onConfirm={handleConfirmDelete}
+      />
 
       <ListsContainer>
-        <List>
-          <Input
-            type="text"
-            name="textInput"
-            value={inputValue}
-            placeholder="add new item"
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                handleAddItem();
-              }
-            }}
-          />
-          {error && <ErrorMessage>{error}</ErrorMessage>}
-          {items.length > 4 && (
-            <SortButton onClick={sortItemsAlphabetically}>
-              <span role="img" aria-label="right arrow">
-                ⬇️
-              </span>{" "}
-              Sort
-            </SortButton>
-          )}
-          {(Object.entries(groupedItems) as [CategoryType, ShoppingItem[]][])
-            .sort(
-              // Sorting categories based on predefined order
-              ([catA], [catB]) =>
-                categories.indexOf(catA) - categories.indexOf(catB)
-            )
-            .map(([category, itemsInCategory]) => (
-              <CategoryContainer key={category}>
-                <Category>
-                  {categoryDisplay[category as CategoryType]?.emoji || "🛒"}{" "}
-                  {categoryDisplay[category as CategoryType]?.name ||
-                    category.charAt(0).toUpperCase() + category.slice(1)}
-                </Category>
-                {itemsInCategory.map((item: ShoppingItem) => (
-                  <ListItem key={item.id}>
-                    <Label>
-                      <CheckboxInput
-                        type="checkbox"
-                        name="checkbox"
-                        onChange={() => checkItem(item)}
-                      />
-                      {item.name}
-                    </Label>
-                    <button
-                      onClick={() => removeItem(item.id)}
-                      title="Remove item"
-                    >
-                      X
-                    </button>
-                  </ListItem>
-                ))}
-              </CategoryContainer>
-            ))}
-          {items.length > 4 && (
-            <RemoveAllButton onClick={removeAllItems}>
-              Remove All Items
-            </RemoveAllButton>
-          )}
-        </List>
-
-        <CheckedItemsContainer>
-          <CheckedItemsList>
-            <CheckedItemsTitle>
-              Checked Items&nbsp;
-              <span role="img" aria-label="checked arrow">
-                ✅
-              </span>
-            </CheckedItemsTitle>
-            {checkedItems.length > 0 && (
-              <Message>
-                {"("}Click to bring back to Shopping&nbsp;List{")"}
-              </Message>
-            )}
-            {checkedItems.length > 4 && (
-              <SortButton onClick={sortCheckedItemsAlphabetically}>
-                <span role="img" aria-label="down arrow">
-                  ⬇️
-                </span>{" "}
-                Sort
-              </SortButton>
-            )}
-            {checkedItems.map((item: ShoppingItem) => (
-              <CheckedItem key={item.id} onClick={() => uncheckItem(item)}>
-                <CheckedItemName>{item.name}</CheckedItemName>{" "}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    removeCheckedItem(item.id);
-                  }}
-                  title="Remove item"
-                >
-                  X
-                </button>
-              </CheckedItem>
-            ))}
-            {checkedItems.length > 4 && (
-              <RemoveAllButton onClick={removeAllCheckedItems}>
-                Remove All Items
-              </RemoveAllButton>
-            )}
-          </CheckedItemsList>
-        </CheckedItemsContainer>
+        <ItemsList
+          items={items}
+          groupedItems={groupedItems}
+          categoryDisplay={categoryDisplay}
+          inputValue={inputValue}
+          itemError={itemError || error}
+          onInputChange={setInputValue}
+          onAddItem={handleAddItem}
+          onCheckItem={checkItem}
+          onRemoveItem={removeItem}
+          onSort={sortItemsAlphabetically}
+          onRemoveAll={removeAllItems}
+        />
+        <CheckedItems
+          items={checkedItems}
+          onUncheckItem={uncheckItem}
+          onRemoveItem={removeCheckedItem}
+          onSort={sortCheckedItemsAlphabetically}
+          onRemoveAll={removeAllCheckedItems}
+        />
       </ListsContainer>
     </Container>
   );

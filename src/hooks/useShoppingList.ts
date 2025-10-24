@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
-import { ref, onValue, set, push, remove, update } from "firebase/database";
+import { useState, useEffect, useCallback } from "react";
+import { ref, onValue, set, remove, update, get } from "firebase/database";
 import { database } from "../utils/firebase";
-import { CategoryType, guessCategory } from "../utils/categoryGuesser";
+import { CategoryType } from "../utils/categories";
 
 export interface ShoppingItem {
   id: string;
@@ -26,54 +26,69 @@ export const useShoppingList = (
   const [checkedItems, setCheckedItems] = useState<ShoppingItem[]>([]);
   // State for the name of the shopping list
   const [listName, setListName] = useState<string>("Shopping List");
-  // State for handling and displaying errors
+  // If error handling is planned for future use but not implemented yet:
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [error, setError] = useState<string>("");
   // State to indicate if the initial data is being loaded
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Reset state when listId changes
+    setItems([]);
+    setCheckedItems([]);
+    setListName("Shopping List");
+    setLoading(true);
+
     if (!listId) {
       setLoading(false);
       return;
     }
 
-    // Set up Firebase references for the list name, items, and checked items.
-    const listNameRef = ref(database, `lists/${listId}/name`);
-    const itemsRef = ref(database, `lists/${listId}/items`);
-    const checkedItemsRef = ref(database, `lists/${listId}/checkedItems`);
+    const listRef = ref(database, `lists/${listId}`);
 
-    // Subscribe to real-time updates for the list name.
-    const unsubscribeListName = onValue(listNameRef, (snapshot) => {
-      const name = snapshot.val();
-      if (name) {
-        setListName(name);
+    // Perform an initial fetch to ensure all data is loaded before hiding the loader.
+    get(listRef).then((snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        setListName(data.name || "Shopping List");
+
+        const itemsArray = data.items
+          ? Object.entries(data.items)
+              .map(([id, item]: [string, any]) => ({ id, ...item }))
+              .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+          : [];
+        setItems(itemsArray);
+
+        const checkedArray = data.checkedItems
+          ? Object.entries(data.checkedItems)
+              .map(([id, item]: [string, any]) => ({ id, ...item }))
+              .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+          : [];
+        setCheckedItems(checkedArray);
       } else {
-        if (onListNotFound && listId) {
+        // If the list doesn't exist, call the handler.
+        if (onListNotFound) {
           onListNotFound(listId);
         }
       }
+      // All initial data is processed, set loading to false.
       setLoading(false);
     });
 
-    // Subscribe to real-time updates for the shopping items.
-    const unsubscribeItems = onValue(itemsRef, (snapshot) => {
-      const data = snapshot.val();
-      const itemsArray = data
-        ? Object.entries(data)
-            .map(([id, item]: [string, any]) => ({ id, ...item }))
-            .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
-        : [];
+    // Now, set up real-time listeners for subsequent updates.
+    const unsubscribeListName = onValue(ref(database, `lists/${listId}/name`), (snapshot) => {
+      setListName(snapshot.val() || "Shopping List");
+    });
+
+    const unsubscribeItems = onValue(ref(database, `lists/${listId}/items`), (snapshot) => {
+      const data = snapshot.val() || {};
+      const itemsArray = Object.entries(data).map(([id, item]: [string, any]) => ({ id, ...item })).sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
       setItems(itemsArray);
     });
 
-    // Subscribe to real-time updates for the checked items.
-    const unsubscribeCheckedItems = onValue(checkedItemsRef, (snapshot) => {
-      const data = snapshot.val();
-      const checkedArray = data
-        ? Object.entries(data)
-            .map(([id, item]: [string, any]) => ({ id, ...item }))
-            .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
-        : [];
+    const unsubscribeCheckedItems = onValue(ref(database, `lists/${listId}/checkedItems`), (snapshot) => {
+      const data = snapshot.val() || {};
+      const checkedArray = Object.entries(data).map(([id, item]: [string, any]) => ({ id, ...item })).sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
       setCheckedItems(checkedArray);
     });
 
@@ -89,40 +104,24 @@ export const useShoppingList = (
    * Adds a new item to the shopping list.
    * @param itemName The name of the item to add.
    */
-  const addItem = async (itemName: string) => {
-    if (!listId) return;
-    if (itemName.trim() === "") return;
-
-    const category = guessCategory(itemName);
-    const trimmedName = itemName.trim();
-
-    // Check if the item already exists in either the main list or the checked list.
-    const existsInItems = items.some(
-      (item) => item.name.toLowerCase() === trimmedName.toLowerCase()
-    );
-    const existsInChecked = checkedItems.some(
-      (item) => item.name.toLowerCase() === trimmedName.toLowerCase()
-    );
-
-    if (existsInItems) {
-      setError(`${trimmedName} is already in the list!`);
-      return;
-    }
-    if (existsInChecked) {
-      setError(`${trimmedName} already in checked list ->`);
-      return;
-    }
-
-    // Push the new item to the Firebase database.
-    const itemsRef = ref(database, `lists/${listId}/items`);
-    const newItemRef = push(itemsRef);
-    await set(newItemRef, {
-      name: trimmedName,
-      category: category,
-      sortOrder: items.length,
-    });
-    setError("");
-  };
+ const addItem = useCallback(
+    async (itemName: string, category: CategoryType) => {
+      if (!listId) return;
+      try {
+        const newItem: ShoppingItem = {
+          id: Date.now().toString(),
+          name: itemName,
+          category: category,
+        };
+        const itemRef = ref(database, `lists/${listId}/items/${newItem.id}`);
+        await set(itemRef, newItem);
+        setError(""); // Clear any previous errors
+      } catch (err) {
+        setError(`Failed to add item: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      }
+    },
+    [listId]
+  );
 
   /**
    * Updates the name of the shopping list.
@@ -130,8 +129,13 @@ export const useShoppingList = (
    */
   const updateListName = async (newName: string) => {
     if (!listId || newName.trim() === "") return;
-    const listNameRef = ref(database, `lists/${listId}/name`);
-    await set(listNameRef, newName.trim());
+    try {
+      const listNameRef = ref(database, `lists/${listId}/name`);
+      await set(listNameRef, newName.trim());
+      setError(""); // Clear any previous errors
+    } catch (err) {
+      setError(`Failed to update list name: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    }
   };
 
   /**
@@ -140,7 +144,12 @@ export const useShoppingList = (
    */
   const removeItem = async (itemId: string) => {
     if (!listId) return;
-    await remove(ref(database, `lists/${listId}/items/${itemId}`));
+    try {
+      await remove(ref(database, `lists/${listId}/items/${itemId}`));
+      setError("");
+    } catch (err) {
+      setError(`Failed to remove item: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    }
   };
 
   /**
@@ -231,7 +240,7 @@ export const useShoppingList = (
     items,
     checkedItems,
     listName,
-    error,
+    error, // Keep error in the return object for components to display
     loading,
     addItem,
     updateListName,

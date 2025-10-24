@@ -12,32 +12,41 @@ export interface ListHistoryItem {
  * @returns An object containing the list history and functions to manipulate it.
  */
 export const useListHistory = () => {
-  const [listHistory, setListHistory] = useState<ListHistoryItem[]>([]);
+  // Load synchronously from localStorage on initial render
+  const [listHistory, setListHistory] = useState<ListHistoryItem[]>(() => {
+    const historyString = localStorage.getItem("listHistory");
+    return historyString ? JSON.parse(historyString) : [];
+  });
   const [historyError, setHistoryError] = useState<string | null>(null);
 
   // Load and validate list history from localStorage on initial mount.
   useEffect(() => {
     const loadAndValidateHistory = async () => {
-      const historyString = localStorage.getItem("listHistory");
-      if (historyString) {
-        const storedHistory: ListHistoryItem[] = JSON.parse(historyString);
-        const validatedHistory: ListHistoryItem[] = [];
+      const storedHistory = listHistory;
+      const validatedHistory: ListHistoryItem[] = [];
+      let hasChanged = false;
 
-        for (const item of storedHistory) {
-          const listRef = ref(database, `lists/${item.id}/name`);
-          const snapshot = await get(listRef);
-          if (snapshot.exists()) {
-            validatedHistory.push(item);
+      for (const item of storedHistory) {
+        const listRef = ref(database, `lists/${item.id}/name`);
+        const snapshot = await get(listRef);
+        if (snapshot.exists()) {
+          const firebaseName = snapshot.val();
+          if (item.name !== firebaseName) {
+            hasChanged = true;
           }
+          validatedHistory.push({ id: item.id, name: firebaseName });
+        } else {
+          hasChanged = true; // An item was removed
         }
-
+      }
+      if (hasChanged || validatedHistory.length !== storedHistory.length) {
         setListHistory(validatedHistory);
         localStorage.setItem("listHistory", JSON.stringify(validatedHistory));
       }
     };
 
     loadAndValidateHistory();
-  }, []);
+  }, [listHistory]);
 
   const addListToHistory = useCallback(
     (listId: string, listName: string): boolean => {

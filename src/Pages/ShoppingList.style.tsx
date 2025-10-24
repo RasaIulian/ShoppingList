@@ -1,4 +1,4 @@
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 
 // Color Palette
 const primaryColor = "#215ADE"; // Razzle Dazzle Blue
@@ -84,10 +84,34 @@ export const Input = styled.input`
   }
 `;
 
+const fadeInOut = keyframes`
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+    25% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+  transform: translateY(0);
+  }
+  75% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+`;
+
 export const ErrorMessage = styled.p`
   color: ${secondaryColor};
   font-size: 1.6rem;
   margin-bottom: 0.5rem;
+  animation: ${fadeInOut} 3s ease-in-out;
 `;
 
 export const ListsContainer = styled.div`
@@ -445,4 +469,22 @@ export const ModalButton = styled.button`
   &:hover {
     opacity: 0.85;
   }
+`;
+
+const blinkAnimation = keyframes`
+  50% {
+    opacity: 0.4;
+  }
+`;
+
+export const LoadingIndicator = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #f39c12; /* An orangeish color */
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
+  animation: ${blinkAnimation} 1.5s linear infinite;
 `;

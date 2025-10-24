@@ -1,44 +1,8 @@
-const CATEGORIES = {
-  FRUCTE_LEGUME: { key: "fructe/legume", name: "Fructe/Legume", emoji: "🍎🥦" },
-  LACTATE: { key: "lactate", name: "Lactate", emoji: "🥛" },
-  CARNE: { key: "carne", name: "Carne", emoji: "🥩" },
-  PANIFICATIE: { key: "panificatie", name: "Panificație", emoji: "🍞" },
-  BAUTURI: { key: "bauturi", name: "Băuturi", emoji: "🥤" },
-  DULCIURI: { key: "dulciuri", name: "Dulciuri", emoji: "🍬" },
-  PRODUSE_DE_BAZA: {
-    key: "produse de baza",
-    name: "Produse de bază",
-    emoji: "🧂",
-  },
-  CONSERVE: { key: "conserve", name: "Conserve", emoji: "🥫" },
-  CONGELATE: { key: "congelate", name: "Congelate", emoji: "🧊" },
-  CURATENIE: { key: "curatenie", name: "Curățenie", emoji: "🧽" },
-  IGIENA_PERSONALA: {
-    key: "igiena personala",
-    name: "Igienă Personală",
-    emoji: "🛁",
-  },
-  NEALIMENTARE: { key: "nealimentare", name: "Nealimentare", emoji: "🔋" },
-  ALTELE: { key: "altele", name: "Altele", emoji: "🛒" },
-} as const;
-
-export const categories = Object.values(CATEGORIES).map((c) => c.key);
-export type CategoryType = (typeof categories)[number];
-
-// Provides display names and emojis for each category.
-export const categoryDisplay: Record<
-  CategoryType,
-  { name: string; emoji: string }
-> = {
-  ...Object.values(CATEGORIES).reduce((acc, { key, name, emoji }) => {
-    acc[key] = { name, emoji };
-    return acc;
-  }, {} as Record<CategoryType, { name: string; emoji: string }>),
-};
+import { CATEGORIES, CategoryType } from "../utils/categories";
 
 // Maps specific product names (in Romanian) to their respective categories.
 const productCategories: Partial<Record<CategoryType, string[]>> = {
-  [CATEGORIES.FRUCTE_LEGUME.key]: [
+  [CATEGORIES.FRUITS_VEGETABLES.ro]: [
     "afine",
     "ananas",
     "anghinare",
@@ -82,7 +46,51 @@ const productCategories: Partial<Record<CategoryType, string[]>> = {
     "zmeura",
     "ciuperci",
   ],
-  [CATEGORIES.LACTATE.key]: [
+  [CATEGORIES.FRUITS_VEGETABLES.en]: [
+    "blueberries",
+    "pineapple",
+    "artichoke",
+    "peppers",
+    "avocado",
+    "bananas",
+    "broccoli",
+    "strawberries",
+    "potatoes",
+    "cucumbers",
+    "onion",
+    "green onion",
+    "cherries",
+    "cauliflower",
+    "dates",
+    "zucchini",
+    "kiwi",
+    "lemons",
+    "mango",
+    "peas",
+    "apples",
+    "carrots",
+    "papaya",
+    "melon",
+    "watermelon",
+    "pears",
+    "peaches",
+    "oranges",
+    "plums",
+    "radishes",
+    "pomegranate",
+    "tomatoes",
+    "lettuce",
+    "beetroot",
+    "asparagus",
+    "grapes",
+    "celery",
+    "garlic",
+    "cabbage",
+    "eggplant",
+    "raspberries",
+    "mushrooms",
+  ],
+  [CATEGORIES.DAIRY.ro]: [
     "branza de burduf",
     "branza de vaci",
     "branza topita",
@@ -107,7 +115,28 @@ const productCategories: Partial<Record<CategoryType, string[]>> = {
     "telemea",
     "unt",
   ],
-  [CATEGORIES.CARNE.key]: [
+  [CATEGORIES.DAIRY.en]: [
+    "cheese",
+    "cottage cheese",
+    "processed cheese",
+    "cheddar",
+    "edam",
+    "feta",
+    "gorgonzola",
+    "gouda",
+    "yogurt",
+    "kefir",
+    "milk",
+    "buttermilk",
+    "mascarpone",
+    "mozzarella",
+    "parmesan",
+    "ricotta",
+    "sour cream",
+    "cooking cream",
+    "butter",
+  ],
+  [CATEGORIES.MEAT.ro]: [
     "calamar",
     "calcan",
     "caracatita",
@@ -148,7 +177,45 @@ const productCategories: Partial<Record<CategoryType, string[]>> = {
     "ton",
     "vita",
   ],
-  [CATEGORIES.PANIFICATIE.key]: [
+  [CATEGORIES.MEAT.en]: [
+    "squid",
+    "turbot",
+    "octopus",
+    "sausages",
+    "pork ribs",
+    "bacon",
+    "pork chop",
+    "crab",
+    "brain",
+    "shrimp",
+    "turkey",
+    "liver",
+    "fish fillet",
+    "hering",
+    "lobster",
+    "spiny lobster",
+    "mackerel",
+    "mici",
+    "mussels",
+    "lamb",
+    "tenderloin",
+    "pastrami",
+    "fish",
+    "turkey breast",
+    "chicken breast",
+    "pork",
+    "chicken",
+    "pork leg",
+    "chicken legs",
+    "kidney",
+    "salami",
+    "sardines",
+    "salmon",
+    "ham",
+    "tuna",
+    "beef",
+  ],
+  [CATEGORIES.BAKERY.ro]: [
     "bagheta",
     "biscuiti",
     "branzoaice",
@@ -170,7 +237,22 @@ const productCategories: Partial<Record<CategoryType, string[]>> = {
     "poale-n brau",
     "prajitura",
   ],
-  [CATEGORIES.BAUTURI.key]: [
+  [CATEGORIES.BAKERY.en]: [
+    "bread",
+    "baguette",
+    "biscuits",
+    "buns",
+    "croissant",
+    "pretzels",
+    "cake",
+    "focaccia",
+    "toast",
+    "donuts",
+    "flatbread",
+    "pastry",
+    "pie",
+  ],
+  [CATEGORIES.BEVERAGES.ro]: [
     "apa",
     "bere",
     "cafea",
@@ -184,7 +266,20 @@ const productCategories: Partial<Record<CategoryType, string[]>> = {
     "votka",
     "whisky",
   ],
-  [CATEGORIES.DULCIURI.key]: [
+  [CATEGORIES.BEVERAGES.en]: [
+    "water",
+    "beer",
+    "coffee",
+    "tea",
+    "gin",
+    "rum",
+    "champagne",
+    "juice",
+    "wine",
+    "vodka",
+    "whisky",
+  ],
+  [CATEGORIES.SWEETS.ro]: [
     "bomboane",
     "ciocolata",
     "fursecuri",
@@ -192,7 +287,16 @@ const productCategories: Partial<Record<CategoryType, string[]>> = {
     "napolitane",
     "prajituri",
   ],
-  [CATEGORIES.CONSERVE.key]: [
+  [CATEGORIES.SWEETS.en]: [
+    "candies",
+    "chocolate",
+    "cookies",
+    "jellies",
+    "wafers",
+    "cakes",
+    "sweets",
+  ],
+  [CATEGORIES.CANNED_GOODS.ro]: [
     "conserva de carne",
     "conserva de ciuperci",
     "conserva de fasole",
@@ -205,7 +309,19 @@ const productCategories: Partial<Record<CategoryType, string[]>> = {
     "conserve de ton",
     "zacusca",
   ],
-  [CATEGORIES.PRODUSE_DE_BAZA.key]: [
+  [CATEGORIES.CANNED_GOODS.en]: [
+    "canned meat",
+    "canned mushrooms",
+    "canned beans",
+    "canned lentils",
+    "canned chickpeas",
+    "canned fish",
+    "canned tomatoes",
+    "canned peas",
+    "canned corn",
+    "canned tuna",
+  ],
+  [CATEGORIES.STAPLES.ro]: [
     "drojdie",
     "fasole",
     "faina",
@@ -221,7 +337,23 @@ const productCategories: Partial<Record<CategoryType, string[]>> = {
     "ulei",
     "zahar",
   ],
-  [CATEGORIES.CONGELATE.key]: [
+  [CATEGORIES.STAPLES.en]: [
+    "yeast",
+    "beans",
+    "flour",
+    "semolina",
+    "lentils",
+    "cornmeal",
+    "chickpeas",
+    "rice",
+    "vinegar",
+    "pasta",
+    "pepper",
+    "salt",
+    "oil",
+    "sugar",
+  ],
+  [CATEGORIES.FROZEN.ro]: [
     "cartofi congelati",
     "fructe de padure congelate",
     "inghetata",
@@ -230,7 +362,16 @@ const productCategories: Partial<Record<CategoryType, string[]>> = {
     "pizza congelata",
     "pui congelat",
   ],
-  [CATEGORIES.CURATENIE.key]: [
+  [CATEGORIES.FROZEN.en]: [
+    "frozen potatoes",
+    "frozen berries",
+    "ice cream",
+    "frozen vegetables",
+    "frozen fish",
+    "frozen pizza",
+    "frozen chicken",
+  ],
+  [CATEGORIES.CLEANING.ro]: [
     "bureti",
     "clor",
     "detergent",
@@ -239,7 +380,15 @@ const productCategories: Partial<Record<CategoryType, string[]>> = {
     "saci de gunoi",
     "solutie de geamuri",
   ],
-  [CATEGORIES.IGIENA_PERSONALA.key]: [
+  [CATEGORIES.CLEANING.en]: [
+    "sponges",
+    "bleach",
+    "detergent",
+    "dish soap",
+    "garbage bags",
+    "window cleaner",
+  ],
+  [CATEGORIES.PERSONAL_HYGIENE.ro]: [
     "ata dentara",
     "deodorant",
     "dischete demachiante",
@@ -251,7 +400,19 @@ const productCategories: Partial<Record<CategoryType, string[]>> = {
     "sapun lichid",
     "sampon",
   ],
-  [CATEGORIES.NEALIMENTARE.key]: [
+  [CATEGORIES.PERSONAL_HYGIENE.en]: [
+    "dental floss",
+    "deodorant",
+    "makeup remover pads",
+    "shower gel",
+    "toilet paper",
+    "toothpaste",
+    "toothbrush",
+    "soap",
+    "liquid soap",
+    "shampoo",
+  ],
+  [CATEGORIES.NON_FOOD.ro]: [
     "baterii",
     "becuri",
     "chibrituri",
@@ -260,6 +421,16 @@ const productCategories: Partial<Record<CategoryType, string[]>> = {
     "lumanari",
     "servetele umede",
     "sfoara",
+  ],
+  [CATEGORIES.NON_FOOD.en]: [
+    "batteries",
+    "light bulbs",
+    "matches",
+    "cling film",
+    "baking paper",
+    "candles",
+    "wet wipes",
+    "twine",
   ],
 };
 
@@ -293,5 +464,5 @@ export const guessCategory = (productName: string): CategoryType => {
     }
   }
 
-  return bestMatch ? bestMatch.category : CATEGORIES.ALTELE.key;
+  return bestMatch ? bestMatch.category : CATEGORIES.OTHERS.ro;
 };
