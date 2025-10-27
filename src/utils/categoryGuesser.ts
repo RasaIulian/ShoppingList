@@ -453,8 +453,14 @@ export const guessCategory = (productName: string): CategoryType => {
   let bestMatch: { category: CategoryType; length: number } | null = null;
 
   for (const keyword of Object.keys(productCategoryMap)) {
+    // Use a regular expression with word boundaries (\b) to match whole words.
+    // This prevents partial matches, e.g., "cola" matching "colant".
+    // We escape the keyword to handle any special regex characters safely.
+    const escapedKeyword = keyword.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
+    const regex = new RegExp(`\\b${escapedKeyword}\\b`, "i");
+
     if (
-      lowerCaseName.includes(keyword) &&
+      regex.test(lowerCaseName) &&
       (!bestMatch || keyword.length > bestMatch.length)
     ) {
       bestMatch = {

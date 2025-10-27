@@ -76,21 +76,34 @@ export const useShoppingList = (
     });
 
     // Now, set up real-time listeners for subsequent updates.
-    const unsubscribeListName = onValue(ref(database, `lists/${listId}/name`), (snapshot) => {
-      setListName(snapshot.val() || "Shopping List");
-    });
+    const unsubscribeListName = onValue(
+      ref(database, `lists/${listId}/name`),
+      (snapshot) => {
+        setListName(snapshot.val() || "Shopping List");
+      }
+    );
 
-    const unsubscribeItems = onValue(ref(database, `lists/${listId}/items`), (snapshot) => {
-      const data = snapshot.val() || {};
-      const itemsArray = Object.entries(data).map(([id, item]: [string, any]) => ({ id, ...item })).sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
-      setItems(itemsArray);
-    });
+    const unsubscribeItems = onValue(
+      ref(database, `lists/${listId}/items`),
+      (snapshot) => {
+        const data = snapshot.val() || {};
+        const itemsArray = Object.entries(data)
+          .map(([id, item]: [string, any]) => ({ id, ...item }))
+          .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+        setItems(itemsArray);
+      }
+    );
 
-    const unsubscribeCheckedItems = onValue(ref(database, `lists/${listId}/checkedItems`), (snapshot) => {
-      const data = snapshot.val() || {};
-      const checkedArray = Object.entries(data).map(([id, item]: [string, any]) => ({ id, ...item })).sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
-      setCheckedItems(checkedArray);
-    });
+    const unsubscribeCheckedItems = onValue(
+      ref(database, `lists/${listId}/checkedItems`),
+      (snapshot) => {
+        const data = snapshot.val() || {};
+        const checkedArray = Object.entries(data)
+          .map(([id, item]: [string, any]) => ({ id, ...item }))
+          .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+        setCheckedItems(checkedArray);
+      }
+    );
 
     // Cleanup function to unsubscribe from all Firebase listeners when the component unmounts or listId changes.
     return () => {
@@ -104,7 +117,7 @@ export const useShoppingList = (
    * Adds a new item to the shopping list.
    * @param itemName The name of the item to add.
    */
- const addItem = useCallback(
+  const addItem = useCallback(
     async (itemName: string, category: CategoryType) => {
       if (!listId) return;
       try {
@@ -117,7 +130,11 @@ export const useShoppingList = (
         await set(itemRef, newItem);
         setError(""); // Clear any previous errors
       } catch (err) {
-        setError(`Failed to add item: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        setError(
+          `Failed to add item: ${
+            err instanceof Error ? err.message : "Unknown error"
+          }`
+        );
       }
     },
     [listId]
@@ -134,7 +151,11 @@ export const useShoppingList = (
       await set(listNameRef, newName.trim());
       setError(""); // Clear any previous errors
     } catch (err) {
-      setError(`Failed to update list name: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      setError(
+        `Failed to update list name: ${
+          err instanceof Error ? err.message : "Unknown error"
+        }`
+      );
     }
   };
 
@@ -148,7 +169,11 @@ export const useShoppingList = (
       await remove(ref(database, `lists/${listId}/items/${itemId}`));
       setError("");
     } catch (err) {
-      setError(`Failed to remove item: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      setError(
+        `Failed to remove item: ${
+          err instanceof Error ? err.message : "Unknown error"
+        }`
+      );
     }
   };
 

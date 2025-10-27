@@ -8,7 +8,10 @@ import {
 } from "./ShoppingList.style";
 import { useShoppingList, ShoppingItem } from "../hooks/useShoppingList";
 import { useListHistory } from "../hooks/useListHistory";
-import { categoryDisplay, CategoryType as CategoryKey } from "../utils/categories";
+import {
+  categoryDisplay,
+  CategoryType as CategoryKey,
+} from "../utils/categories";
 import { getCategoryFromFirebase } from "../utils/firebaseCategoryGuesser";
 import { ListHeader } from "../components/ListHeader";
 import { ItemsList } from "../components/ItemsList";
@@ -148,13 +151,17 @@ const ShoppingList: React.FC = () => {
       );
 
       if (isInShoppingList) {
-        setItemError(`Please add a different product, "${trimmedItemName}" is already on the shopping list.`);
+        setItemError(
+          `Please add a different product, "${trimmedItemName}" is already on the shopping list.`
+        );
         setTimeout(() => setItemError(null), 3000);
         setInputValue("");
         return;
       }
-         if (isInCheckedList) {
-        setItemError(`Please click on the product, "${trimmedItemName}" is already on the checked list.`);
+      if (isInCheckedList) {
+        setItemError(
+          `Please click on the product, "${trimmedItemName}" is already on the checked list.`
+        );
         setTimeout(() => setItemError(null), 3000);
         setInputValue("");
         return;
@@ -166,9 +173,9 @@ const ShoppingList: React.FC = () => {
         await addItem(trimmedItemName, category);
         setInputValue("");
       } catch (err) {
-          setItemError("Failed to add item. Please try again.");
-          setTimeout(() => setItemError(null), 3000);
-          setInputValue("");
+        setItemError("Failed to add item. Please try again.");
+        setTimeout(() => setItemError(null), 3000);
+        setInputValue("");
       }
     }
   };
@@ -221,12 +228,16 @@ const ShoppingList: React.FC = () => {
   };
 
   // Find the current list's name from history for a better loading message.
-  const currentListNameFromHistory = listHistory.find(item => item.id === listId)?.name;
+  const currentListNameFromHistory = listHistory.find(
+    (item) => item.id === listId
+  )?.name;
 
   if (loading) {
     return (
       <Container>
-        <LoadingIndicator>Loading {currentListNameFromHistory || "your list"}...</LoadingIndicator>
+        <LoadingIndicator>
+          Loading {currentListNameFromHistory || "your list"}...
+        </LoadingIndicator>
       </Container>
     );
   }
