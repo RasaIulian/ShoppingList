@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { database } from "../utils/firebase";
-import { ref, set, remove } from "firebase/database";
+import { ref, set, remove, onDisconnect } from "firebase/database";
 import {
   Container,
   ListsContainer,
@@ -18,7 +18,10 @@ import { ListHeader } from "../components/ListHeader";
 import { ItemsList } from "../components/ItemsList";
 import { CheckedItems } from "../components/CheckedItems";
 import { ConfirmDeleteModal } from "../components/ConfirmDeleteModal";
+import { useListNavigation } from "../hooks/useListNavigation";
+
 const ShoppingList: React.FC = () => {
+  const databaseRef = useRef<any>(null);
   const listId = useListId();
   const [inputValue, setInputValue] = useState("");
   const [itemError, setItemError] = useState<string | null>(null);
@@ -34,6 +37,27 @@ const ShoppingList: React.FC = () => {
     removeFromListHistory,
     historyError,
   } = useListHistory();
+  const { navigateToList } = useListNavigation();
+
+  // Setup database connection and cleanup
+  useEffect(() => {
+    if (listId) {
+      databaseRef.current = ref(database, `lists/${listId}`);
+
+      // Setup disconnect handling
+      const disconnectRef = onDisconnect(databaseRef.current);
+
+      // Cleanup function when listId exists
+      return () => {
+        if (databaseRef.current) {
+          // Cancel any pending onDisconnect operations
+          disconnectRef.cancel();
+        }
+      };
+    }
+    // Return empty cleanup function when no listId
+    return () => {};
+  }, [listId]);
 
   const handleNewList = useCallback(async () => {
     // Generate a new list ID but don't navigate immediately
@@ -55,12 +79,21 @@ const ShoppingList: React.FC = () => {
     const wasAdded = addListToHistory(newListId, newListName);
 
     if (wasAdded) {
-      // Set default name for the new list in the database immediately
-      const newListRef = ref(database, `lists/${newListId}/name`);
-      await set(newListRef, newListName);
-      window.location.href = `?list=${newListId}`;
+      try {
+        const newListRef = ref(database, `lists/${newListId}/name`);
+        await set(newListRef, newListName);
+        navigateToList(newListId, true); // Force reload for new list
+      } catch (error) {
+        console.error("Failed to create new list:", error);
+        // Handle offline state
+        if (!navigator.onLine) {
+          setItemError(
+            "You appear to be offline. Please check your connection."
+          );
+        }
+      }
     }
-  }, [addListToHistory, listHistory]);
+  }, [addListToHistory, listHistory, navigateToList]);
 
   const handleListNotFound = useCallback(
     (notFoundListId: string) => {
@@ -69,13 +102,13 @@ const ShoppingList: React.FC = () => {
       // If we are on the page of the deleted list, navigate away.
       if (listId === notFoundListId) {
         if (remainingHistory.length > 0) {
-          window.location.href = `?list=${remainingHistory[0].id}`;
+          navigateToList(remainingHistory[0].id);
         } else {
           handleNewList(); // Or create a new one if no history is left
         }
       }
     },
-    [listId, removeFromListHistory, handleNewList]
+    [listId, removeFromListHistory, handleNewList, navigateToList]
   );
 
   const {
@@ -175,19 +208,13 @@ const ShoppingList: React.FC = () => {
     if (!listToDelete) return;
 
     try {
-      // 1. Remove from Firebase
       await remove(ref(database, `lists/${listToDelete.id}`));
-
-      // 2. Update local history state
       const remainingHistory = removeFromListHistory(listToDelete.id);
 
-      // 3. If we deleted the list we are on, navigate away
       if (listId === listToDelete.id) {
         const nextListId =
           remainingHistory.length > 0 ? remainingHistory[0].id : null;
-        window.location.href = nextListId
-          ? `?list=${nextListId}`
-          : window.location.pathname;
+        navigateToList(nextListId, true); // Force reload after deletion
       }
     } catch (error) {
       console.error("Failed to delete list:", error);

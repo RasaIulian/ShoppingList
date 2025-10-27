@@ -1,11 +1,14 @@
 import React from "react";
+import { BrowserRouter } from "react-router-dom";
 import ShoppingList from "./Pages/ShoppingList";
 
 const App: React.FC = () => {
   return (
-    <div>
-      <ShoppingList />
-    </div>
+    <BrowserRouter>
+      <div>
+        <ShoppingList />
+      </div>
+    </BrowserRouter>
   );
 };
 
