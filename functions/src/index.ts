@@ -18,6 +18,8 @@ import { categoriesRO, categoriesEN } from "../../src/utils/categories";
 // In the v1 API, each function can only serve one request per container, so
 // this will be the maximum concurrent request count.
 setGlobalOptions({ maxInstances: 10, region: "europe-central2" });
+// The 'region' property above sets the physical location where this Cloud Function
+// will be deployed and run. All client-side calls must target this region.
 
 /**
  * A callable function that uses the Vertex AI Gemini model to categorize

@@ -1,16 +1,12 @@
-import { getFunctions, httpsCallable, Functions } from "firebase/functions";
-import { app } from "./firebase";
+import { httpsCallable } from "firebase/functions";
+import { functions } from "./firebase";
 import { guessCategory } from "./categoryGuesser";
 import { CategoryType } from "./categories";
-
-// Get a regional instance of the Functions service.
-// This is crucial because your function is deployed in 'europe-central2'.
-const regionalFunctions: Functions = getFunctions(app, "europe-central2");
 
 // Define the structure of the data returned from the function
 type CategorizeResult = { category: CategoryType };
 
-const categorizeItemCallable = httpsCallable(regionalFunctions, "categorizeItem");
+const categorizeItemCallable = httpsCallable(functions, "categorizeItem");
 
 export const getCategoryFromFirebase = async (
   itemName: string
