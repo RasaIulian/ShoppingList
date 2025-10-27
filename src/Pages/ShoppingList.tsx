@@ -8,6 +8,7 @@ import {
 } from "./ShoppingList.style";
 import { useShoppingList, ShoppingItem } from "../hooks/useShoppingList";
 import { useListHistory } from "../hooks/useListHistory";
+import { useListId } from "../hooks/useListId";
 import {
   categoryDisplay,
   CategoryType as CategoryKey,
@@ -17,34 +18,8 @@ import { ListHeader } from "../components/ListHeader";
 import { ItemsList } from "../components/ItemsList";
 import { CheckedItems } from "../components/CheckedItems";
 import { ConfirmDeleteModal } from "../components/ConfirmDeleteModal";
-
-// Get or create list ID
-const getListId = (): string => {
-  const urlParams = new URLSearchParams(window.location.search);
-  let listId = urlParams.get("list");
-
-  if (!listId) {
-    // Check localStorage for existing list
-    listId = localStorage.getItem("currentListId");
-
-    if (!listId) {
-      // Generate new list ID
-      listId = `list_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
-      localStorage.setItem("currentListId", listId);
-    }
-
-    // Update URL without reload
-    window.history.replaceState({}, "", `?list=${listId}`);
-  } else {
-    // Store the list ID from URL
-    localStorage.setItem("currentListId", listId);
-  }
-
-  return listId;
-};
-
 const ShoppingList: React.FC = () => {
-  const [listId, setListId] = useState<string | null>(null);
+  const listId = useListId();
   const [inputValue, setInputValue] = useState("");
   const [itemError, setItemError] = useState<string | null>(null);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
@@ -86,10 +61,6 @@ const ShoppingList: React.FC = () => {
       window.location.href = `?list=${newListId}`;
     }
   }, [addListToHistory, listHistory]);
-
-  useEffect(() => {
-    setListId(getListId());
-  }, []);
 
   const handleListNotFound = useCallback(
     (notFoundListId: string) => {
