@@ -18,7 +18,11 @@ interface ListHeaderProps {
   historyError: string | null;
   onUpdateListName: (newName: string) => Promise<void>;
   onNewList: () => void;
-  onDeleteList: (e: React.MouseEvent<HTMLButtonElement>, listId: string, listName: string) => void;
+  onDeleteList: (
+    e: React.MouseEvent<HTMLButtonElement>,
+    listId: string,
+    listName: string
+  ) => void;
 }
 
 export const ListHeader: React.FC<ListHeaderProps> = ({
@@ -31,37 +35,46 @@ export const ListHeader: React.FC<ListHeaderProps> = ({
   onDeleteList,
 }) => {
   const [isEditingName, setIsEditingName] = useState(false);
-  const [tempListName, setTempListName] = useState("");
+  const [tempListName, setTempListName] = useState(listName); // Initialize with the current listName
   const [listNameError, setListNameError] = useState<string | null>(null);
   const editContainerRef = useRef<HTMLDivElement>(null);
 
-  const handleUpdateListName = useCallback(async (nameToUpdate: string) => {
-    setListNameError(null);
-    const newName = nameToUpdate.trim();
+  const handleUpdateListName = useCallback(
+    async (nameToUpdate: string) => {
+      setListNameError(null);
+      const newName = nameToUpdate.trim();
 
-    if (newName === "") {
-      setListNameError("List name cannot be empty.");
-      return;
-    }
+      if (newName === "") {
+        setListNameError("List name cannot be empty.");
+        return;
+      }
 
-    const isNameTaken = listHistory.some(
-      (item) => item.id !== listId && item.name.toLowerCase() === newName.toLowerCase()
-    );
+      const isNameTaken = listHistory.some(
+        (item) =>
+          item.id !== listId &&
+          item.name.toLowerCase() === newName.toLowerCase()
+      );
 
-    if (isNameTaken) {
-      setListNameError(`Sorry, a list named "${newName}" already exists.`);
-      setTempListName(listName);
-      setTimeout(() => setListNameError(null), 3000);
-      return;
-    }
+      if (isNameTaken) {
+        setListNameError(`Sorry, a list named "${newName}" already exists.`);
+        setTempListName(listName);
+        setTimeout(() => setListNameError(null), 3000);
+        return;
+      }
 
-    await onUpdateListName(newName);
-    setIsEditingName(false);
-  }, [onUpdateListName, listId, listHistory, listName]);
+      await onUpdateListName(newName);
+      setIsEditingName(false);
+    },
+    [onUpdateListName, listId, listHistory, listName]
+  );
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (isEditingName && editContainerRef.current && !editContainerRef.current.contains(event.target as Node)) {
+      if (
+        isEditingName &&
+        editContainerRef.current &&
+        !editContainerRef.current.contains(event.target as Node)
+      ) {
         handleUpdateListName(tempListName);
       }
     };
@@ -80,15 +93,25 @@ export const ListHeader: React.FC<ListHeaderProps> = ({
             onChange={(e) => setTempListName(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") handleUpdateListName(tempListName);
-              if (e.key === "Escape") setIsEditingName(false);
+              if (e.key === "Escape") {
+                // Reset tempListName to the original listName
+                setTempListName(listName);
+                setIsEditingName(false);
+              }
             }}
             autoFocus
           />
           {listNameError && <ErrorMessage>{listNameError}</ErrorMessage>}
         </TitleEditContainer>
       ) : (
-        <TitleDisplay onClick={() => setIsEditingName(true)} title="Click to edit list name">
-          {listName} <span role="img" aria-label="Shopping cart">🛒</span>
+        <TitleDisplay
+          onClick={() => setIsEditingName(true)}
+          title="Click to edit list name"
+        >
+          {listName}{" "}
+          <span role="img" aria-label="Shopping cart">
+            🛒
+          </span>
         </TitleDisplay>
       )}
       <HeaderActionsContainer>
