@@ -89,15 +89,11 @@ const fadeInOut = keyframes`
     opacity: 0;
     transform: translateY(-10px);
   }
-    25% {
+  10% {
     opacity: 1;
     transform: translateY(0);
   }
-  50% {
-    opacity: 1;
-  transform: translateY(0);
-  }
-  75% {
+  90% {
     opacity: 1;
     transform: translateY(0);
   }
@@ -111,7 +107,7 @@ export const ErrorMessage = styled.p`
   color: ${secondaryColor};
   font-size: 1.6rem;
   margin-bottom: 0.5rem;
-  animation: ${fadeInOut} 3s ease-in-out;
+  animation: ${fadeInOut} 5s ease-in-out;
 `;
 
 export const ListsContainer = styled.div`

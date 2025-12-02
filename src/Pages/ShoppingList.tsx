@@ -158,7 +158,7 @@ const ShoppingList: React.FC = () => {
         setItemError(
           `Please add a different product, "${trimmedItemName}" is already on the shopping list.`
         );
-        setTimeout(() => setItemError(null), 3000);
+        setTimeout(() => setItemError(null), 5000);
         setInputValue("");
         return;
       }
@@ -166,7 +166,7 @@ const ShoppingList: React.FC = () => {
         setItemError(
           `Please click on the product, "${trimmedItemName}" is already on the checked list.`
         );
-        setTimeout(() => setItemError(null), 3000);
+        setTimeout(() => setItemError(null), 5000);
         setInputValue("");
         return;
       }
@@ -178,7 +178,7 @@ const ShoppingList: React.FC = () => {
         setInputValue("");
       } catch (err) {
         setItemError("Failed to add item. Please try again.");
-        setTimeout(() => setItemError(null), 3000);
+        setTimeout(() => setItemError(null), 5000);
         setInputValue("");
       }
     }
