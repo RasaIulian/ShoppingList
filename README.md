@@ -1,4 +1,6 @@
 PREVIEW:<br>
+<img width="210" height="210" alt="QR-code" src="https://github.com/user-attachments/assets/71a7cef5-cb29-4586-8e01-fdf5f9887325" />
+
 ![image](https://github.com/RasaIulian/ShoppingList/assets/99275349/82f825ae-b4a3-46c6-9baa-900873f55f41)
 ![image](https://github.com/RasaIulian/ShoppingList/assets/99275349/f2e579d5-aed1-4a83-9660-24f548ada43e)
 
