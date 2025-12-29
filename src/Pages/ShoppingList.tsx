@@ -22,6 +22,7 @@ import { useListNavigation } from "../hooks/useListNavigation";
 
 const ShoppingList: React.FC = () => {
   const databaseRef = useRef<any>(null);
+  const hasInitializedRef = useRef(false); // Add this ref to track initialization
   const listId = useListId();
   const [inputValue, setInputValue] = useState("");
   const [itemError, setItemError] = useState<string | null>(null);
@@ -94,6 +95,14 @@ const ShoppingList: React.FC = () => {
       }
     }
   }, [addListToHistory, listHistory, navigateToList]);
+
+  // Initialize with a single list on first mount only
+  useEffect(() => {
+    if (!hasInitializedRef.current && !listId && listHistory.length === 0) {
+      hasInitializedRef.current = true;
+      handleNewList();
+    }
+  }, [listId, listHistory.length, handleNewList]);
 
   const handleListNotFound = useCallback(
     (notFoundListId: string) => {
