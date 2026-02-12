@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { ListHistoryItem } from "../hooks/useListHistory";
+import { useLanguage } from "../hooks/useLanguage";
 import {
   Title,
   TitleEditContainer,
@@ -8,6 +9,7 @@ import {
   TitleDisplay,
   HeaderActionsContainer,
   NewListButton,
+  LanguageSwitchButton,
 } from "../Pages/ShoppingList.style";
 import { ListHistory } from "./ListHistory";
 
@@ -21,7 +23,7 @@ interface ListHeaderProps {
   onDeleteList: (
     e: React.MouseEvent<HTMLButtonElement>,
     listId: string,
-    listName: string
+    listName: string,
   ) => void;
 }
 
@@ -34,6 +36,7 @@ export const ListHeader: React.FC<ListHeaderProps> = ({
   onNewList,
   onDeleteList,
 }) => {
+  const { language, toggleLanguage } = useLanguage();
   const [isEditingName, setIsEditingName] = useState(false);
   const [tempListName, setTempListName] = useState(listName); // Initialize with the current listName
   const [listNameError, setListNameError] = useState<string | null>(null);
@@ -52,7 +55,7 @@ export const ListHeader: React.FC<ListHeaderProps> = ({
       const isNameTaken = listHistory.some(
         (item) =>
           item.id !== listId &&
-          item.name.toLowerCase() === newName.toLowerCase()
+          item.name.toLowerCase() === newName.toLowerCase(),
       );
 
       if (isNameTaken) {
@@ -65,7 +68,7 @@ export const ListHeader: React.FC<ListHeaderProps> = ({
       await onUpdateListName(newName);
       setIsEditingName(false);
     },
-    [onUpdateListName, listId, listHistory, listName]
+    [onUpdateListName, listId, listHistory, listName],
   );
 
   useEffect(() => {
@@ -115,6 +118,12 @@ export const ListHeader: React.FC<ListHeaderProps> = ({
         </TitleDisplay>
       )}
       <HeaderActionsContainer>
+        <LanguageSwitchButton
+          onClick={toggleLanguage}
+          title="Toggle language (RO/EN)"
+        >
+          {language.toUpperCase()}
+        </LanguageSwitchButton>
         <NewListButton onClick={onNewList} title="Create a new list">
           +
         </NewListButton>

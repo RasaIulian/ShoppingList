@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { ref, onValue, set, remove, update, get } from "firebase/database";
 import { database } from "../utils/firebase";
-import { CategoryType } from "../utils/categories";
+import { CategoryType, convertCategoryLanguage } from "../utils/categories";
 
 export interface ShoppingItem {
   id: string;
@@ -11,6 +11,16 @@ export interface ShoppingItem {
 }
 
 /**
+ * Normalize a category to Romanian (base language)
+ * This ensures backward compatibility with items created in any language
+ */
+const normalizeCategoryToRo = (category: any): CategoryType => {
+  if (!category) return "altele";
+  const normalized = convertCategoryLanguage(category, "ro");
+  return normalized || ("altele" as CategoryType);
+};
+
+/**
  * Custom hook to manage the state and Firebase interactions for a single shopping list.
  * It handles fetching data, adding, removing, checking, and sorting items.
  * @param listId The unique identifier for the shopping list.
@@ -18,7 +28,7 @@ export interface ShoppingItem {
  */
 export const useShoppingList = (
   listId: string | null,
-  onListNotFound?: (listId: string) => void
+  onListNotFound?: (listId: string) => void,
 ) => {
   // State for the items that are yet to be purchased
   const [items, setItems] = useState<ShoppingItem[]>([]);
@@ -54,14 +64,22 @@ export const useShoppingList = (
 
         const itemsArray = data.items
           ? Object.entries(data.items)
-              .map(([id, item]: [string, any]) => ({ id, ...item }))
+              .map(([id, item]: [string, any]) => ({
+                id,
+                ...item,
+                category: normalizeCategoryToRo(item.category),
+              }))
               .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
           : [];
         setItems(itemsArray);
 
         const checkedArray = data.checkedItems
           ? Object.entries(data.checkedItems)
-              .map(([id, item]: [string, any]) => ({ id, ...item }))
+              .map(([id, item]: [string, any]) => ({
+                id,
+                ...item,
+                category: normalizeCategoryToRo(item.category),
+              }))
               .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
           : [];
         setCheckedItems(checkedArray);
@@ -80,7 +98,7 @@ export const useShoppingList = (
       ref(database, `lists/${listId}/name`),
       (snapshot) => {
         setListName(snapshot.val() || "Shopping List");
-      }
+      },
     );
 
     const unsubscribeItems = onValue(
@@ -88,10 +106,14 @@ export const useShoppingList = (
       (snapshot) => {
         const data = snapshot.val() || {};
         const itemsArray = Object.entries(data)
-          .map(([id, item]: [string, any]) => ({ id, ...item }))
+          .map(([id, item]: [string, any]) => ({
+            id,
+            ...item,
+            category: normalizeCategoryToRo(item.category),
+          }))
           .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
         setItems(itemsArray);
-      }
+      },
     );
 
     const unsubscribeCheckedItems = onValue(
@@ -99,10 +121,14 @@ export const useShoppingList = (
       (snapshot) => {
         const data = snapshot.val() || {};
         const checkedArray = Object.entries(data)
-          .map(([id, item]: [string, any]) => ({ id, ...item }))
+          .map(([id, item]: [string, any]) => ({
+            id,
+            ...item,
+            category: normalizeCategoryToRo(item.category),
+          }))
           .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
         setCheckedItems(checkedArray);
-      }
+      },
     );
 
     // Cleanup function to unsubscribe from all Firebase listeners when the component unmounts or listId changes.
@@ -133,11 +159,11 @@ export const useShoppingList = (
         setError(
           `Failed to add item: ${
             err instanceof Error ? err.message : "Unknown error"
-          }`
+          }`,
         );
       }
     },
-    [listId]
+    [listId],
   );
 
   /**
@@ -154,7 +180,7 @@ export const useShoppingList = (
       setError(
         `Failed to update list name: ${
           err instanceof Error ? err.message : "Unknown error"
-        }`
+        }`,
       );
     }
   };
@@ -172,7 +198,7 @@ export const useShoppingList = (
       setError(
         `Failed to remove item: ${
           err instanceof Error ? err.message : "Unknown error"
-        }`
+        }`,
       );
     }
   };
@@ -207,7 +233,7 @@ export const useShoppingList = (
   const uncheckItem = async (itemToUncheck: ShoppingItem) => {
     if (!listId) return;
     await remove(
-      ref(database, `lists/${listId}/checkedItems/${itemToUncheck.id}`)
+      ref(database, `lists/${listId}/checkedItems/${itemToUncheck.id}`),
     );
     await set(ref(database, `lists/${listId}/items/${itemToUncheck.id}`), {
       name: itemToUncheck.name,
@@ -251,7 +277,7 @@ export const useShoppingList = (
   const sortCheckedItemsAlphabetically = async () => {
     if (!listId) return;
     const sorted = [...checkedItems].sort((a, b) =>
-      a.name.localeCompare(b.name)
+      a.name.localeCompare(b.name),
     );
     const updates: { [key: string]: any } = {};
     sorted.forEach((item, index) => {

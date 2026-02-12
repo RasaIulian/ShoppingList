@@ -2,7 +2,11 @@ import { setGlobalOptions } from "firebase-functions";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import * as logger from "firebase-functions/logger";
 import { VertexAI } from "@google-cloud/vertexai";
-import { categoriesRO, categoriesEN } from "../../src/utils/categories";
+import {
+  categoriesRO,
+  categoriesEN,
+  CATEGORIES,
+} from "../../src/utils/categories";
 
 // Start writing functions
 // https://firebase.google.com/docs/functions/typescript
@@ -22,6 +26,25 @@ setGlobalOptions({ maxInstances: 10, region: "europe-central2" });
 // will be deployed and run. All client-side calls must target this region.
 
 /**
+ * Helper function to convert a category key from one language to another
+ */
+const convertCategoryLanguage = (
+  categoryKey: string,
+  targetLanguage: "ro" | "en",
+): string => {
+  // Find the category entry that matches the given key
+  const categoryEntry = Object.values(CATEGORIES).find(
+    (cat) => cat.ro === categoryKey || cat.en === categoryKey,
+  );
+
+  if (!categoryEntry) {
+    return targetLanguage === "en" ? "others" : "altele";
+  }
+
+  return targetLanguage === "en" ? categoryEntry.en : categoryEntry.ro;
+};
+
+/**
  * A callable function that uses the Vertex AI Gemini model to categorize
  * a shopping list item.
  */
@@ -33,14 +56,14 @@ export const categorizeItem = onCall(
   async (request) => {
     logger.info("categorizeItem function invoked.", { structuredData: true });
 
-    const { text } = request.data;
+    const { text, language = "ro" } = request.data;
 
     if (!text || typeof text !== "string" || text.trim().length === 0) {
       logger.error("Request data must include a non-empty 'text' field.");
       throw new HttpsError(
         "invalid-argument",
         "The function must be called with one argument 'text' " +
-          "containing the item name to categorize."
+          "containing the item name to categorize.",
       );
     }
 
@@ -49,7 +72,7 @@ export const categorizeItem = onCall(
       logger.error("GCLOUD_PROJECT environment variable not set.");
       throw new HttpsError(
         "internal",
-        "Server configuration error: Project ID is missing."
+        "Server configuration error: Project ID is missing.",
       );
     }
 
@@ -89,7 +112,7 @@ export const categorizeItem = onCall(
           // The model might return the JSON wrapped in a markdown code block.
           const cleanedResponseText = responseText.replace(
             /^```json\s*|```$/g,
-            ""
+            "",
           );
           const responseObject = JSON.parse(cleanedResponseText);
           category = responseObject.category || "altele";
@@ -109,16 +132,31 @@ export const categorizeItem = onCall(
         response: aiResponse,
       });
 
-      logger.info(`Item: "${text}", Guessed Category: "${category}"`);
+      // Convert category to the requested language if needed
+      const categoryInRequestedLanguage =
+        language === "en"
+          ? convertCategoryLanguage(category, "en")
+          : convertCategoryLanguage(category, "ro");
 
-      // Return the category to the client
-      return { category };
+      logger.info(
+        `Item: "${text}", Guessed Category: "${categoryInRequestedLanguage}" (language: ${language})`,
+      );
+
+      // Return both language variants for flexibility
+      const categoryRo = convertCategoryLanguage(category, "ro");
+      const categoryEn = convertCategoryLanguage(category, "en");
+
+      return {
+        category: categoryInRequestedLanguage,
+        categoryRo,
+        categoryEn,
+      };
     } catch (error) {
       logger.error("Error calling Vertex AI:", error);
       throw new HttpsError(
         "internal",
-        "Failed to categorize item using Vertex AI."
+        "Failed to categorize item using Vertex AI.",
       );
     }
-  }
+  },
 );

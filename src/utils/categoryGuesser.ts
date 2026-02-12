@@ -1,4 +1,5 @@
 import { CATEGORIES, CategoryType } from "../utils/categories";
+import { Language } from "../hooks/useLanguage";
 
 // Maps specific product names (in Romanian) to their respective categories.
 const productCategories: Partial<Record<CategoryType, string[]>> = {
@@ -436,19 +437,26 @@ const productCategories: Partial<Record<CategoryType, string[]>> = {
 
 // Creates a flattened map from product name to category for quick lookup.
 const productCategoryMap: Record<string, CategoryType> = Object.entries(
-  productCategories
-).reduce((acc, [category, products]) => {
-  if (products) {
-    products.forEach((product) => {
-      // Assigns the category to each product.
-      acc[product] = category as CategoryType;
-    });
-  }
-  return acc;
-}, {} as Record<string, CategoryType>);
+  productCategories,
+).reduce(
+  (acc, [category, products]) => {
+    if (products) {
+      products.forEach((product) => {
+        // Assigns the category to each product.
+        acc[product] = category as CategoryType;
+      });
+    }
+    return acc;
+  },
+  {} as Record<string, CategoryType>,
+);
 
 // Function to guess the category of a product based on its name.
-export const guessCategory = (productName: string): CategoryType => {
+// Returns category in the specified language
+export const guessCategory = (
+  productName: string,
+  language: Language = "ro",
+): CategoryType => {
   const lowerCaseName = productName.trim().toLowerCase();
   let bestMatch: { category: CategoryType; length: number } | null = null;
 
@@ -470,5 +478,16 @@ export const guessCategory = (productName: string): CategoryType => {
     }
   }
 
-  return bestMatch ? bestMatch.category : CATEGORIES.OTHERS.ro;
+  const defaultCategory =
+    language === "en" ? CATEGORIES.OTHERS.en : CATEGORIES.OTHERS.ro;
+  const matchedCategory = bestMatch ? bestMatch.category : defaultCategory;
+
+  // If the matched category doesn't match the target language, convert it
+  if (language === "en" && matchedCategory === CATEGORIES.OTHERS.ro) {
+    return CATEGORIES.OTHERS.en;
+  } else if (language === "ro" && matchedCategory === CATEGORIES.OTHERS.en) {
+    return CATEGORIES.OTHERS.ro;
+  }
+
+  return matchedCategory;
 };

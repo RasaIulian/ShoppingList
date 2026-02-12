@@ -9,9 +9,11 @@ import {
 import { useShoppingList, ShoppingItem } from "../hooks/useShoppingList";
 import { useListHistory } from "../hooks/useListHistory";
 import { useListId } from "../hooks/useListId";
+import { useLanguage } from "../hooks/useLanguage";
 import {
   categoryDisplay,
   CategoryType as CategoryKey,
+  convertCategoryLanguage,
 } from "../utils/categories";
 import { getCategoryFromFirebase } from "../utils/firebaseCategoryGuesser";
 import { ListHeader } from "../components/ListHeader";
@@ -21,6 +23,7 @@ import { ConfirmDeleteModal } from "../components/ConfirmDeleteModal";
 import { useListNavigation } from "../hooks/useListNavigation";
 
 const ShoppingList: React.FC = () => {
+  const { language } = useLanguage();
   const databaseRef = useRef<any>(null);
   const hasInitializedRef = useRef(false); // Add this ref to track initialization
   const listId = useListId();
@@ -89,7 +92,7 @@ const ShoppingList: React.FC = () => {
         // Handle offline state
         if (!navigator.onLine) {
           setItemError(
-            "You appear to be offline. Please check your connection."
+            "You appear to be offline. Please check your connection.",
           );
         }
       }
@@ -117,7 +120,7 @@ const ShoppingList: React.FC = () => {
         }
       }
     },
-    [listId, removeFromListHistory, handleNewList, navigateToList]
+    [listId, removeFromListHistory, handleNewList, navigateToList],
   );
 
   const {
@@ -157,15 +160,15 @@ const ShoppingList: React.FC = () => {
       const trimmedItemName = inputValue.trim();
       const lowerCaseItemName = trimmedItemName.toLowerCase();
       const isInShoppingList = items.some(
-        (item) => item.name.toLowerCase() === lowerCaseItemName
+        (item) => item.name.toLowerCase() === lowerCaseItemName,
       );
       const isInCheckedList = checkedItems.some(
-        (item) => item.name.toLowerCase() === lowerCaseItemName
+        (item) => item.name.toLowerCase() === lowerCaseItemName,
       );
 
       if (isInShoppingList) {
         setItemError(
-          `Please add a different product, "${trimmedItemName}" is already on the shopping list.`
+          `Please add a different product, "${trimmedItemName}" is already on the shopping list.`,
         );
         setTimeout(() => setItemError(null), 5000);
         setInputValue("");
@@ -173,7 +176,7 @@ const ShoppingList: React.FC = () => {
       }
       if (isInCheckedList) {
         setItemError(
-          `Please click on the product, "${trimmedItemName}" is already on the checked list.`
+          `Please click on the product, "${trimmedItemName}" is already on the checked list.`,
         );
         setTimeout(() => setItemError(null), 5000);
         setInputValue("");
@@ -182,8 +185,15 @@ const ShoppingList: React.FC = () => {
 
       try {
         setItemError(null); // Clear previous errors
-        const category = await getCategoryFromFirebase(trimmedItemName);
-        await addItem(trimmedItemName, category);
+        const category = await getCategoryFromFirebase(
+          trimmedItemName,
+          language,
+        );
+        // Normalize category to Romanian (base language) before storing in Firebase
+        // This ensures the same item always has the same category regardless of which language was used
+        const normalizedCategory =
+          convertCategoryLanguage(category, "ro") || category;
+        await addItem(trimmedItemName, normalizedCategory);
         setInputValue("");
       } catch (err) {
         setItemError("Failed to add item. Please try again.");
@@ -193,19 +203,22 @@ const ShoppingList: React.FC = () => {
     }
   };
 
-  const groupedItems = items.reduce((acc, item) => {
-    const category = item.category || "Other"; // Fallback for items without a category
-    if (!acc[category]) {
-      acc[category] = [];
-    }
-    acc[category].push(item);
-    return acc;
-  }, {} as Record<CategoryKey, ShoppingItem[]>);
+  const groupedItems = items.reduce(
+    (acc, item) => {
+      const category = item.category || "Other"; // Fallback for items without a category
+      if (!acc[category]) {
+        acc[category] = [];
+      }
+      acc[category].push(item);
+      return acc;
+    },
+    {} as Record<CategoryKey, ShoppingItem[]>,
+  );
 
   const handleOpenConfirmModal = (
     e: React.MouseEvent<HTMLButtonElement>,
     listIdToRemove: string,
-    listNameToRemove: string
+    listNameToRemove: string,
   ) => {
     e.stopPropagation(); // Prevent the dropdown from closing
     e.preventDefault();
@@ -236,7 +249,7 @@ const ShoppingList: React.FC = () => {
 
   // Find the current list's name from history for a better loading message.
   const currentListNameFromHistory = listHistory.find(
-    (item) => item.id === listId
+    (item) => item.id === listId,
   )?.name;
 
   if (loading) {

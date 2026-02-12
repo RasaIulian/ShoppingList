@@ -42,7 +42,9 @@ export const TitleInput = styled.input`
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
   font-family: inherit;
   border-radius: 0.5rem;
-  transition: background-color, box-shadow 0.3s ease;
+  transition:
+    background-color,
+    box-shadow 0.3s ease;
   &:focus {
     outline: none;
     background-color: #fafafa;
@@ -75,7 +77,9 @@ export const Input = styled.input`
   background-color: ${neutralColor};
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   margin-bottom: 0.5rem;
-  transition: background-color, box-shadow 0.3s ease;
+  transition:
+    background-color,
+    box-shadow 0.3s ease;
 
   &:focus {
     outline: none;
@@ -177,7 +181,9 @@ export const Label = styled.label`
   margin-left: 0.5rem;
   position: relative;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: background-color, box-shadow 0.3s ease;
+  transition:
+    background-color,
+    box-shadow 0.3s ease;
 
   &:hover {
     background-color: ${neutralColor};
@@ -237,7 +243,9 @@ export const CheckedItem = styled.li`
   border-radius: 0.5rem;
   padding: 1rem;
   margin-bottom: 0.5rem;
-  transition: background-color, box-shadow 0.3s ease;
+  transition:
+    background-color,
+    box-shadow 0.3s ease;
   width: calc(100% - 2rem);
   display: flex;
   justify-content: space-between;
@@ -405,7 +413,9 @@ export const RemoveHistoryButton = styled.button`
   padding: 0 0.5rem;
   margin-left: 1rem;
   opacity: 0.6;
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
 
   &:hover {
@@ -483,4 +493,26 @@ export const LoadingIndicator = styled.div`
   color: #f39c12; /* An orangeish color */
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
   animation: ${blinkAnimation} 1.5s linear infinite;
+`;
+
+export const LanguageSwitchButton = styled.button`
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 1.4rem;
+  padding: 0.8rem 1rem;
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  color: ${primaryColor};
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+  font-weight: bold;
+  min-width: 3.5rem;
+
+  &:hover {
+    background-color: ${primaryColor};
+    color: ${neutralColor};
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transform: scale(1.05);
+  }
 `;
