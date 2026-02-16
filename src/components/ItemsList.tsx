@@ -1,6 +1,7 @@
 import React from "react";
 import { ShoppingItem } from "../hooks/useShoppingList";
 import { useLanguage } from "../hooks/useLanguage";
+import { UI_STRINGS } from "../utils/translations";
 import {
   List,
   ListItem,
@@ -53,12 +54,14 @@ export const ItemsList: React.FC<ItemsListProps> = ({
         type="text"
         name="ItemInput"
         value={inputValue}
-        placeholder="add new item"
+        placeholder={UI_STRINGS[language].addNewItem}
         onChange={(e) => onInputChange(e.target.value)}
         onKeyDown={(e) => e.key === "Enter" && onAddItem()}
       />
       {itemError && <ErrorMessage>{itemError}</ErrorMessage>}
-      {items.length > 4 && <SortButton onClick={onSort}>⬇️ Sort</SortButton>}
+      {items.length > 4 && (
+        <SortButton onClick={onSort}>{UI_STRINGS[language].sort}</SortButton>
+      )}
       {Object.entries(groupedItems)
         .sort(([catA], [catB]) => catA.localeCompare(catB))
         .map(([category, itemsInCategory]) => {
@@ -82,7 +85,7 @@ export const ItemsList: React.FC<ItemsListProps> = ({
                   </Label>
                   <button
                     onClick={() => onRemoveItem(item.id)}
-                    title="Remove item"
+                    title={UI_STRINGS[language].removeItem}
                   >
                     X
                   </button>
@@ -93,7 +96,7 @@ export const ItemsList: React.FC<ItemsListProps> = ({
         })}
       {items.length > 4 && (
         <RemoveAllButton onClick={onRemoveAll}>
-          Remove All Items
+          {UI_STRINGS[language].removeAllItems}
         </RemoveAllButton>
       )}
     </List>

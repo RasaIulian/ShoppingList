@@ -1,6 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { ref, get } from "firebase/database";
 import { database } from "../utils/firebase";
+import { Language } from "./useLanguage";
+import { UI_STRINGS } from "../utils/translations";
 
 export interface ListHistoryItem {
   id: string;
@@ -9,20 +11,38 @@ export interface ListHistoryItem {
 
 /**
  * Custom hook to manage the history of shopping lists in localStorage.
+ * @param language The current language for error messages
  * @returns An object containing the list history and functions to manipulate it.
  */
-export const useListHistory = () => {
+export const useListHistory = (language: Language) => {
   // Load synchronously from localStorage on initial render
   const [listHistory, setListHistory] = useState<ListHistoryItem[]>(() => {
     const historyString = localStorage.getItem("listHistory");
-    return historyString ? JSON.parse(historyString) : [];
+    if (!historyString) return [];
+
+    // Parse and clean up any old items that might have extra properties
+    const parsed = JSON.parse(historyString);
+    return Array.isArray(parsed)
+      ? parsed.map((item: any) => ({ id: item.id, name: item.name }))
+      : [];
   });
   const [historyError, setHistoryError] = useState<string | null>(null);
+  const hasValidatedRef = useRef(false);
 
-  // Load and validate list history from localStorage on initial mount.
+  // Load and validate list history from localStorage on initial mount only.
   useEffect(() => {
+    if (hasValidatedRef.current) {
+      return;
+    }
+
     const loadAndValidateHistory = async () => {
-      const storedHistory = listHistory;
+      const historyString = localStorage.getItem("listHistory");
+      const storedHistory = Array.isArray(
+        historyString ? JSON.parse(historyString) : [],
+      )
+        ? JSON.parse(historyString || "[]")
+        : [];
+
       const validatedHistory: ListHistoryItem[] = [];
       let hasChanged = false;
 
@@ -34,19 +54,31 @@ export const useListHistory = () => {
           if (item.name !== firebaseName) {
             hasChanged = true;
           }
+          // Ensure we only store id and name, cleaning up any extra properties
           validatedHistory.push({ id: item.id, name: firebaseName });
         } else {
           hasChanged = true; // An item was removed
         }
       }
-      if (hasChanged || validatedHistory.length !== storedHistory.length) {
+      // Check for any extra properties in stored items that need cleanup
+      const needsCleanup = storedHistory.some(
+        (item: any) =>
+          Object.keys(item).length > 2 || !("id" in item) || !("name" in item),
+      );
+
+      if (
+        hasChanged ||
+        validatedHistory.length !== storedHistory.length ||
+        needsCleanup
+      ) {
         setListHistory(validatedHistory);
         localStorage.setItem("listHistory", JSON.stringify(validatedHistory));
       }
     };
 
+    hasValidatedRef.current = true;
     loadAndValidateHistory();
-  }, [listHistory]);
+  }, []);
 
   const addListToHistory = useCallback(
     (listId: string, listName: string): boolean => {
@@ -54,9 +86,7 @@ export const useListHistory = () => {
       // Add only if the list is not already in the history.
       if (!listHistory.some((item) => item.id === listId)) {
         if (listHistory.length >= 10) {
-          setHistoryError(
-            "Warning: limit of 10 lists reached. Please remove a list to add a new one."
-          );
+          setHistoryError(UI_STRINGS[language].listLimitWarning);
           return false;
         }
         const newHistory = [
@@ -68,7 +98,7 @@ export const useListHistory = () => {
       }
       return true;
     },
-    [listHistory]
+    [language, listHistory],
   );
 
   /**
@@ -85,12 +115,14 @@ export const useListHistory = () => {
       const itemIndex = history.findIndex((item) => item.id === listId);
       if (itemIndex > -1) {
         history[itemIndex].name = listName;
+        // Ensure clean objects with only id and name
+        history = history.map((item) => ({ id: item.id, name: item.name }));
         localStorage.setItem("listHistory", JSON.stringify(history));
         // Update state to trigger re-render in components using the hook.
         setListHistory([...history]);
       }
     },
-    []
+    [],
   );
 
   /**
@@ -105,7 +137,7 @@ export const useListHistory = () => {
       setListHistory(updatedHistory);
       return updatedHistory;
     },
-    [listHistory]
+    [listHistory],
   );
 
   // Expose state and management functions.

@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { ListHistoryItem } from "../hooks/useListHistory";
+import { useLanguage } from "../hooks/useLanguage";
+import { UI_STRINGS } from "../utils/translations";
 import {
   HistoryButton,
   HistoryContainer,
@@ -11,16 +13,27 @@ import {
 
 interface ListHistoryProps {
   listHistory: ListHistoryItem[];
-  onDelete: (e: React.MouseEvent<HTMLButtonElement>, listId: string, listName: string) => void;
+  onDelete: (
+    e: React.MouseEvent<HTMLButtonElement>,
+    listId: string,
+    listName: string,
+  ) => void;
 }
 
-export const ListHistory: React.FC<ListHistoryProps> = ({ listHistory, onDelete }) => {
+export const ListHistory: React.FC<ListHistoryProps> = ({
+  listHistory,
+  onDelete,
+}) => {
+  const { language } = useLanguage();
   const [showHistory, setShowHistory] = useState(false);
   const historyContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (historyContainerRef.current && !historyContainerRef.current.contains(event.target as Node)) {
+      if (
+        historyContainerRef.current &&
+        !historyContainerRef.current.contains(event.target as Node)
+      ) {
         setShowHistory(false);
       }
     };
@@ -35,10 +48,10 @@ export const ListHistory: React.FC<ListHistoryProps> = ({ listHistory, onDelete 
   return (
     <HistoryContainer ref={historyContainerRef}>
       <HistoryButton
-        title="Saved lists"
+        title={UI_STRINGS[language].savedLists}
         onClick={() => setShowHistory(!showHistory)}
       >
-        My lists
+        {UI_STRINGS[language].myLists}
       </HistoryButton>
       {showHistory && (
         <HistoryDropdown>
@@ -50,7 +63,7 @@ export const ListHistory: React.FC<ListHistoryProps> = ({ listHistory, onDelete 
                 </a>
                 <RemoveHistoryButton
                   onClick={(e) => onDelete(e, item.id, item.name)}
-                  title={`Delete "${item.name}" permanently`}
+                  title={`${UI_STRINGS[language].deletePermanently} "${item.name}"`}
                 >
                   &times;
                 </RemoveHistoryButton>

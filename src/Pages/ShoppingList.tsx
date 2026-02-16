@@ -10,6 +10,7 @@ import { useShoppingList, ShoppingItem } from "../hooks/useShoppingList";
 import { useListHistory } from "../hooks/useListHistory";
 import { useListId } from "../hooks/useListId";
 import { useLanguage } from "../hooks/useLanguage";
+import { UI_STRINGS } from "../utils/translations";
 import {
   categoryDisplay,
   CategoryType as CategoryKey,
@@ -40,7 +41,7 @@ const ShoppingList: React.FC = () => {
     updateListHistoryName,
     removeFromListHistory,
     historyError,
-  } = useListHistory();
+  } = useListHistory(language);
   const { navigateToList } = useListNavigation();
 
   // Setup database connection and cleanup
@@ -70,12 +71,12 @@ const ShoppingList: React.FC = () => {
       .slice(2, 11)}`; // -> "fcv0jotv1"
 
     // Find a unique name for the new list
-    let newListName = "Shopping List";
+    let newListName = UI_STRINGS[language].shoppingList;
     let counter = 2;
     const existingNames = new Set(listHistory.map((item) => item.name));
 
     while (existingNames.has(newListName)) {
-      newListName = `Shopping List ${counter}`;
+      newListName = `${UI_STRINGS[language].shoppingList} ${counter}`;
       counter++;
     }
 
@@ -84,8 +85,13 @@ const ShoppingList: React.FC = () => {
 
     if (wasAdded) {
       try {
-        const newListRef = ref(database, `lists/${newListId}/name`);
-        await set(newListRef, newListName);
+        const newListRef = ref(database, `lists/${newListId}`);
+        await set(newListRef, {
+          name: newListName,
+          language: "en",
+          items: {},
+          checkedItems: {},
+        });
         navigateToList(newListId, true); // Force reload for new list
       } catch (error) {
         console.error("Failed to create new list:", error);
@@ -97,7 +103,7 @@ const ShoppingList: React.FC = () => {
         }
       }
     }
-  }, [addListToHistory, listHistory, navigateToList]);
+  }, [addListToHistory, language, listHistory, navigateToList]);
 
   // Initialize with a single list on first mount only
   useEffect(() => {

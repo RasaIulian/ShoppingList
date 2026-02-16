@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
 
 /**
- * A custom hook to manage the shopping list ID.
+ * useListId Hook
+ * Gets the current shopping list ID from URL query parameter (?list=ID)
+ * Returns null if no list is selected (user should create a new one)
+ * @returns The list ID string or null if no list is selected
  * It retrieves the ID from the URL, falls back to localStorage,
  * or generates a new one if none exists.
  * It also ensures the URL is always in sync with the current list ID.

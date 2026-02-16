@@ -1,6 +1,19 @@
+/**
+ * List Navigation Hook
+ * Handles navigation between different shopping lists
+ * Supports both regular navigation and full page reload for creating new lists
+ */
+
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 
+/**
+ * useListNavigation Hook
+ * Provides navigation functionality for switching between lists
+ * - Regular navigation: Updates URL without full page reload
+ * - Force reload: Performs full page reload (used when creating new lists)
+ * @returns Object with navigateToList function
+ */
 export const useListNavigation = () => {
   const navigate = useNavigate();
 
@@ -13,7 +26,7 @@ export const useListNavigation = () => {
         navigate(newUrl, { replace: true });
       }
     },
-    [navigate]
+    [navigate],
   );
 
   return { navigateToList };

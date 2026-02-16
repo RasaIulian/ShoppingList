@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { ListHistoryItem } from "../hooks/useListHistory";
 import { useLanguage } from "../hooks/useLanguage";
+import { UI_STRINGS } from "../utils/translations";
 import {
   Title,
   TitleEditContainer,
@@ -109,10 +110,10 @@ export const ListHeader: React.FC<ListHeaderProps> = ({
       ) : (
         <TitleDisplay
           onClick={() => setIsEditingName(true)}
-          title="Click to edit list name"
+          title={UI_STRINGS[language].clickToEdit}
         >
           {listName}{" "}
-          <span role="img" aria-label="Shopping cart">
+          <span role="img" aria-label={UI_STRINGS[language].shoppingCart}>
             🛒
           </span>
         </TitleDisplay>
@@ -120,11 +121,14 @@ export const ListHeader: React.FC<ListHeaderProps> = ({
       <HeaderActionsContainer>
         <LanguageSwitchButton
           onClick={toggleLanguage}
-          title="Toggle language (RO/EN)"
+          title={UI_STRINGS[language].toggleLanguage}
         >
           {language.toUpperCase()}
         </LanguageSwitchButton>
-        <NewListButton onClick={onNewList} title="Create a new list">
+        <NewListButton
+          onClick={onNewList}
+          title={UI_STRINGS[language].createNewList}
+        >
           +
         </NewListButton>
         <ListHistory listHistory={listHistory} onDelete={onDeleteList} />

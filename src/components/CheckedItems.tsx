@@ -1,5 +1,7 @@
 import React from "react";
 import { ShoppingItem } from "../hooks/useShoppingList";
+import { useLanguage } from "../hooks/useLanguage";
+import { UI_STRINGS } from "../utils/translations";
 import {
   CheckedItemsContainer,
   CheckedItemsTitle,
@@ -25,23 +27,40 @@ export const CheckedItems: React.FC<CheckedItemsProps> = ({
   onRemoveItem,
   onSort,
   onRemoveAll,
-}) => (
-  <CheckedItemsContainer>
-    <CheckedItemsList>
-      <CheckedItemsTitle>Checked Items ✅</CheckedItemsTitle>
-      {items.length > 0 && <Message>{"("}Click to bring back to Shopping&nbsp;List{")"}</Message>}
-      {items.length > 4 && <SortButton onClick={onSort}>⬇️ Sort</SortButton>}
-      {items.map((item) => (
-        <CheckedItem key={item.id} onClick={() => onUncheckItem(item)}>
-          <CheckedItemName>{item.name}</CheckedItemName>
-          <button onClick={(e) => { e.stopPropagation(); onRemoveItem(item.id); }} title="Remove item">
-            X
-          </button>
-        </CheckedItem>
-      ))}
-      {items.length > 4 && (
-        <RemoveAllButton onClick={onRemoveAll}>Remove All Items</RemoveAllButton>
-      )}
-    </CheckedItemsList>
-  </CheckedItemsContainer>
-);
+}) => {
+  const { language } = useLanguage();
+  return (
+    <CheckedItemsContainer>
+      <CheckedItemsList>
+        <CheckedItemsTitle>
+          {UI_STRINGS[language].checkedItems}
+        </CheckedItemsTitle>
+        {items.length > 0 && (
+          <Message>{UI_STRINGS[language].clickToBringBack}</Message>
+        )}
+        {items.length > 4 && (
+          <SortButton onClick={onSort}>{UI_STRINGS[language].sort}</SortButton>
+        )}
+        {items.map((item) => (
+          <CheckedItem key={item.id} onClick={() => onUncheckItem(item)}>
+            <CheckedItemName>{item.name}</CheckedItemName>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemoveItem(item.id);
+              }}
+              title={UI_STRINGS[language].removeItem}
+            >
+              X
+            </button>
+          </CheckedItem>
+        ))}
+        {items.length > 4 && (
+          <RemoveAllButton onClick={onRemoveAll}>
+            {UI_STRINGS[language].removeAllItems}
+          </RemoveAllButton>
+        )}
+      </CheckedItemsList>
+    </CheckedItemsContainer>
+  );
+};

@@ -1,4 +1,6 @@
 import React from "react";
+import { useLanguage } from "../hooks/useLanguage";
+import { UI_STRINGS } from "../utils/translations";
 import {
   ModalOverlay,
   ModalContent,
@@ -20,18 +22,24 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
   onClose,
   onConfirm,
 }) => {
+  const { language } = useLanguage();
   if (!isOpen || !listToDelete) return null;
 
   return (
     <ModalOverlay>
       <ModalContent>
         <ModalMessage>
-          Are you sure you want to permanently delete the list "<strong>{listToDelete.name}</strong>"? This action cannot be undone.
+          {UI_STRINGS[language].deleteListConfirm.replace(
+            "{{listName}}",
+            listToDelete.name,
+          )}
         </ModalMessage>
         <ModalActions>
-          <ModalButton onClick={onClose}>Cancel</ModalButton>
+          <ModalButton onClick={onClose}>
+            {UI_STRINGS[language].cancel}
+          </ModalButton>
           <ModalButton color="danger" onClick={onConfirm}>
-            Delete
+            {UI_STRINGS[language].delete}
           </ModalButton>
         </ModalActions>
       </ModalContent>
