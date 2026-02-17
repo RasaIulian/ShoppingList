@@ -8,7 +8,6 @@ import {
   CheckedItemsList,
   CheckedItem,
   CheckedItemName,
-  Message,
   RemoveAllButton,
   SortButton,
 } from "../Pages/ShoppingList.style";
@@ -35,14 +34,17 @@ export const CheckedItems: React.FC<CheckedItemsProps> = ({
         <CheckedItemsTitle>
           {UI_STRINGS[language].checkedItems}
         </CheckedItemsTitle>
-        {items.length > 0 && (
-          <Message>{UI_STRINGS[language].clickToBringBack}</Message>
-        )}
         {items.length > 4 && (
-          <SortButton onClick={onSort}>{UI_STRINGS[language].sort}</SortButton>
+          <SortButton onClick={onSort} title={UI_STRINGS[language].sortTitle}>
+            {UI_STRINGS[language].sort}
+          </SortButton>
         )}
         {items.map((item) => (
-          <CheckedItem key={item.id} onClick={() => onUncheckItem(item)}>
+          <CheckedItem
+            key={item.id}
+            title={UI_STRINGS[language].clickToBringBack}
+            onClick={() => onUncheckItem(item)}
+          >
             <CheckedItemName>{item.name}</CheckedItemName>
             <button
               onClick={(e) => {

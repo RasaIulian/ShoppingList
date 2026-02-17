@@ -280,12 +280,6 @@ export const CheckedItemName = styled.span`
   font-size: 1.6rem;
 `;
 
-export const Message = styled.p`
-  font-size: 1.4rem;
-  width: 101%;
-  margin-bottom: 0.5rem;
-`;
-
 export const RemoveAllButton = styled.button`
   background-color: transparent;
   border: none;

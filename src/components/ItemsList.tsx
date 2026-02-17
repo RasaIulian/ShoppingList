@@ -60,7 +60,9 @@ export const ItemsList: React.FC<ItemsListProps> = ({
       />
       {itemError && <ErrorMessage>{itemError}</ErrorMessage>}
       {items.length > 4 && (
-        <SortButton onClick={onSort}>{UI_STRINGS[language].sort}</SortButton>
+        <SortButton onClick={onSort} title={UI_STRINGS[language].sortTitle}>
+          {UI_STRINGS[language].sort}
+        </SortButton>
       )}
       {Object.entries(groupedItems)
         .sort(([catA], [catB]) => catA.localeCompare(catB))
