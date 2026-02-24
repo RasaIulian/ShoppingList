@@ -98,7 +98,7 @@ const ShoppingList: React.FC = () => {
         // Handle offline state
         if (!navigator.onLine) {
           setItemError(
-            "You appear to be offline. Please check your connection.",
+            UI_STRINGS[language].offlineError,
           );
         }
       }
@@ -174,7 +174,7 @@ const ShoppingList: React.FC = () => {
 
       if (isInShoppingList) {
         setItemError(
-          `Please add a different product, "${trimmedItemName}" is already on the shopping list.`,
+          UI_STRINGS[language].itemAlreadyInList.replace("{{itemName}}", trimmedItemName),
         );
         setTimeout(() => setItemError(null), 5000);
         setInputValue("");
@@ -182,7 +182,7 @@ const ShoppingList: React.FC = () => {
       }
       if (isInCheckedList) {
         setItemError(
-          `Please click on the product, "${trimmedItemName}" is already on the checked list.`,
+          UI_STRINGS[language].itemAlreadyInCheckedList.replace("{{itemName}}", trimmedItemName),
         );
         setTimeout(() => setItemError(null), 5000);
         setInputValue("");
@@ -202,7 +202,7 @@ const ShoppingList: React.FC = () => {
         await addItem(trimmedItemName, normalizedCategory);
         setInputValue("");
       } catch (err) {
-        setItemError("Failed to add item. Please try again.");
+        setItemError(UI_STRINGS[language].failedToAddItem);
         setTimeout(() => setItemError(null), 5000);
         setInputValue("");
       }

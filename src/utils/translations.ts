@@ -36,6 +36,13 @@ export const UI_STRINGS: Record<Language, Record<string, string>> = {
       'Sunteți sigur că doriți să ștergeți permanent "{{listName}}"? Această acțiune va fi permanenta.',
     cancel: "Anulare",
     delete: "Șterge",
+    itemAlreadyInList: '"{{itemName}}" se află deja pe lista de cumpărături.',
+    itemAlreadyInCheckedList:
+      '"{{itemName}}" se află deja pe lista cu articole cumparate, click pentru a-l aduce înapoi dacă este necesar.',
+    failedToAddItem:
+      "Nu s-a putut adăuga articolul. Vă rugăm încercați din nou.",
+    offlineError:
+      "Se pare că sunteți deconectat. Vă rugăm să verificați conexiunea.",
   },
   en: {
     shoppingList: "Shopping List",
@@ -59,5 +66,10 @@ export const UI_STRINGS: Record<Language, Record<string, string>> = {
       'Are you sure you want to permanently delete "{{listName}}"? This action cannot be undone.',
     cancel: "Cancel",
     delete: "Delete",
+    itemAlreadyInList: '"{{itemName}}" is already on the shopping list.',
+    itemAlreadyInCheckedList:
+      '"{{itemName}}" is already on the checked list, click to bring it back if needed.',
+    failedToAddItem: "Failed to add item. Please try again.",
+    offlineError: "You appear to be offline. Please check your connection.",
   },
 };
